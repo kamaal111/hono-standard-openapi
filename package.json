@@ -1,0 +1,72 @@
+{
+  "name": "hono-standard-openapi",
+  "version": "1.0.0",
+  "description": "Generate OpenAPI documents from any Standard Schema library, for Hono.",
+  "keywords": [
+    "hono",
+    "json-schema",
+    "openapi",
+    "standard-schema",
+    "validator"
+  ],
+  "license": "ISC",
+  "author": "",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "compile": "tsc -p tsconfig.build.json",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "prepare": "husky",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@standard-schema/spec": "^1.1.0",
+    "openapi3-ts": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint-plugin-import": "^2.32.0",
+    "hono": "^4.13.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "oxfmt": "^0.64.0",
+    "oxlint": "^1.79.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "hono": ">=4.10.0"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts}": "pnpm run lint",
+    "*": "oxfmt --no-error-on-unmatched-pattern"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.6.0",
+      "onFail": "download"
+    }
+  }
+}
