@@ -1,0 +1,59 @@
+README.md
+  s_8ab87672d6aa86::t_77ca2feec97de0 1-96
+docs/design.md
+  s_8ab87672d6aa86::t_ead7f60566a425 1-124
+docs/zod-openapi-findings.md
+  s_8ab87672d6aa86::t_df0091b2f2fe66 1-85
+package.json
+  s_8ab87672d6aa86::t_6cbde93ee8e088 1-72
+pnpm-lock.yaml
+  s_8ab87672d6aa86::t_b2f40419421486 1-3731
+src/app.ts
+  s_8ab87672d6aa86::t_6c7f6ff958c867 1-233
+src/errors.ts
+  s_8ab87672d6aa86::t_8d99b8679eaabc 1-37
+src/generator.ts
+  s_8ab87672d6aa86::t_5b09eec81f348e 1-311
+src/index.ts
+  s_8ab87672d6aa86::t_ebd65b2cd89ca1 1-47
+src/json-schema.ts
+  s_8ab87672d6aa86::t_0916a5d061d187 1-340
+src/registry.ts
+  s_8ab87672d6aa86::t_c3ed3fbc3b4ba2 1-111
+src/route.ts
+  s_8ab87672d6aa86::t_8ab747595b89bd 1-35
+src/standard-schema.ts
+  s_8ab87672d6aa86::t_6f21d406e00dd4 1-40
+src/type-inference.ts
+  s_8ab87672d6aa86::t_6d96e7eef750af 1-119
+src/types.ts
+  s_8ab87672d6aa86::t_5d707fd3bf0fa6 1-68
+src/validator.ts
+  s_8ab87672d6aa86::t_bc4243caaa70c6 1-66
+test/app.test.ts
+  s_8ab87672d6aa86::t_01a18ef287b751 1-207
+test/generator.test.ts
+  s_8ab87672d6aa86::t_ad54195aab9b9d 1-315
+test/vendor-neutrality.test.ts
+  s_8ab87672d6aa86::t_8a3efdb6912d3e 1-31
+tsconfig.build.json
+  s_8ab87672d6aa86::t_ee00ce0526d581 1-8
+tsconfig.json
+  s_8ab87672d6aa86::t_9a6de410e28153 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "24462fb55286da7b4a2a20c860a01da77806db63",
+  "prompts": {},
+  "sessions": {
+    "s_8ab87672d6aa86": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca25cf55-380a-4f04-9768-7eb9fc04eeac",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
