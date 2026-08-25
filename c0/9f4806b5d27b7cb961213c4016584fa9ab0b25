@@ -1,0 +1,33 @@
+justfile
+  s_15417d5fff74c0::t_e474262532ae71 16-19
+  s_15417d5fff74c0::t_4cb799020fdba6 44-47
+.github/workflows/release-npm.yaml
+  s_15417d5fff74c0::t_69bd4fa1c28d81 19,23-24,30
+  s_15417d5fff74c0::t_4cb799020fdba6 1-18,26-29,31-50
+  s_15417d5fff74c0::t_e474262532ae71 20-22,25
+package.json
+  s_15417d5fff74c0::t_4cb799020fdba6 35
+.github/workflows/main.yaml
+  s_15417d5fff74c0::t_4cb799020fdba6 1-18,26-28,30-50,58-61,63-75
+  s_15417d5fff74c0::t_69bd4fa1c28d81 22-23,25,29,51,55-56,62
+  s_15417d5fff74c0::t_e474262532ae71 19-21,24,52-54,57
+scripts/publish.sh
+  s_15417d5fff74c0::t_4cb799020fdba6 1-17,19
+  s_15417d5fff74c0::t_9ff55d752209e1 18,20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c09f4806b5d27b7cb961213c4016584fa9ab0b25",
+  "prompts": {},
+  "sessions": {
+    "s_15417d5fff74c0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a03a5f-9cf1-7713-abca-189ac48c6ae2",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
