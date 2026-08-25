@@ -1,0 +1,44 @@
+justfile
+  h_66e824d23aae73 2
+  s_15417d5fff74c0::t_e474262532ae71 17-20
+  s_15417d5fff74c0::t_4cb799020fdba6 45-48
+.github/workflows/main.yaml
+  s_15417d5fff74c0::t_69bd4fa1c28d81 22-23,25,29,51,55-56,62
+  s_15417d5fff74c0::t_e474262532ae71 19-21,24,52-54,57
+  s_15417d5fff74c0::t_4cb799020fdba6 1-18,26-28,30-50,58-61,63-75
+package.json
+  h_66e824d23aae73 2-3,12
+  s_15417d5fff74c0::t_4cb799020fdba6 35
+scripts/publish.sh
+  s_15417d5fff74c0::t_8f859d047f5e94 17-18
+  s_15417d5fff74c0::t_953fed93f318a5 9-11,15
+  s_15417d5fff74c0::t_4cb799020fdba6 1-8,12-14,16,20
+  s_15417d5fff74c0::t_9ff55d752209e1 19
+.github/workflows/release-npm.yaml
+  s_15417d5fff74c0::t_e474262532ae71 20-22,25
+  s_15417d5fff74c0::t_69bd4fa1c28d81 19,23-24,30
+  s_15417d5fff74c0::t_4cb799020fdba6 1-18,26-29,31-50
+LICENSE
+  h_66e824d23aae73 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "8a642ba43ae3e60ad770b1ff170d4cee4be87691",
+  "prompts": {},
+  "humans": {
+    "h_66e824d23aae73": {
+      "author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_15417d5fff74c0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a03a5f-9cf1-7713-abca-189ac48c6ae2",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": null
+    }
+  }
+}
