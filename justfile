@@ -1,4 +1,5 @@
 set export
+set dotenv-load
 
 PN := "pnpm"
 PNR := PN + " run"
@@ -12,6 +13,10 @@ alias i := install-modules
 # List available commands
 default:
     just --list --unsorted
+
+# Print the pnpm version required by package.json
+pnpm-version:
+    @jq -r '.devEngines.packageManager.version' package.json
 
 # Run all sanity checks
 [parallel]
@@ -36,6 +41,10 @@ test-cov:
 # Compile package
 compile:
     {{ PNR }} compile
+
+# Publish package
+publish:
+    {{ PNR }} release
 
 # Format code
 format:
