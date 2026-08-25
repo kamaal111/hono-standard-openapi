@@ -1,0 +1,24 @@
+package.json
+  s_15417d5fff74c0::t_1542611c09955b 14-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "60ede19e774b9fd3d13c8dc8546fb9ca239d54d3",
+  "prompts": {},
+  "humans": {
+    "h_66e824d23aae73": {
+      "author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_15417d5fff74c0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a03a5f-9cf1-7713-abca-189ac48c6ae2",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
