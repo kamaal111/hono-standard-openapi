@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type {
   HeadersObject,
   LinksObject,
@@ -14,7 +15,7 @@ import type { StandardSchema } from './standard-schema.ts';
 export type { ReferenceObject, SchemaObject };
 
 /** Either a schema to convert, or an already-written OpenAPI schema to pass through untouched. */
-export type SchemaOrReference = StandardSchema | SchemaObject | ReferenceObject;
+export type SchemaOrReference = StandardSchemaV1 | SchemaObject | ReferenceObject;
 
 export interface MediaTypeObject {
   readonly schema?: SchemaOrReference | undefined;

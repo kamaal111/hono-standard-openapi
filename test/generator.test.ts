@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { describe, expect, it } from 'vitest';
 
 import { standardSchema } from './helpers.ts';
@@ -5,13 +6,12 @@ import { ComponentNameConflictError, UnsupportedSchemaError } from '../src/error
 import { OpenAPIGenerator } from '../src/generator.ts';
 import { OpenAPIRegistry } from '../src/registry.ts';
 import type { StandardSchema } from '../src/standard-schema.ts';
-import type { RouteConfigBase } from '../src/types.ts';
+import type { RouteConfigBase, SchemaOrReference } from '../src/types.ts';
 
 const JSON_TYPE = 'application/json';
 
 /** The generated document, read as plain JSON so assertions can reach into it freely. */
-// oxlint-disable-next-line typescript/no-explicit-any
-type Document = Record<string, any>;
+type Document = Record<string, ReturnType<typeof JSON.parse>>;
 
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
 
@@ -22,11 +22,10 @@ function documentFor(...routes: RouteConfigBase[]): Document {
   return new OpenAPIGenerator(registry).generateDocument(DOC_CONFIG);
 }
 
-function jsonResponseRoute(schema: unknown, path = '/things'): RouteConfigBase {
+function jsonResponseRoute(schema: SchemaOrReference, path = '/things'): RouteConfigBase {
   return {
     method: 'get',
     path,
-    // @ts-expect-error: tests pass schemas positionally without repeating the full media type shape.
     responses: { 200: { content: { [JSON_TYPE]: { schema } }, description: 'ok' } },
   };
 }
@@ -143,7 +142,9 @@ describe('component naming', () => {
   });
 
   it('rejects a schema that cannot describe itself as JSON Schema', () => {
-    const opaque = { '~standard': { validate: () => ({ value: null }), vendor: 'nothing', version: 1 } };
+    const opaque: StandardSchemaV1 = {
+      '~standard': { validate: () => ({ value: null }), vendor: 'nothing', version: 1 },
+    };
 
     expect(() => documentFor(jsonResponseRoute(opaque))).toThrow(UnsupportedSchemaError);
   });

@@ -18,10 +18,9 @@ export type ValidationResult<T> =
  * Returning a `Response` (or throwing) takes over the request; returning nothing lets it continue,
  * which is how a hook can log a failure without changing the outcome.
  */
-export type Hook<T, E extends Env, P extends string, R> = (
-  result: ValidationResult<T>,
-  c: Context<E, P>,
-) => R | undefined;
+export type Hook<T, E extends Env, P extends string, R> = {
+  bivarianceHack(result: ValidationResult<T>, c: Context<E, P>): R | undefined;
+}['bivarianceHack'];
 
 /**
  * Validates one part of a request against a Standard Schema.

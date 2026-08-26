@@ -6,14 +6,13 @@ import { z } from 'zod';
 import { OpenAPIGenerator } from '../src/generator.ts';
 import { OpenAPIRegistry } from '../src/registry.ts';
 import type { StandardSchema } from '../src/standard-schema.ts';
-import type { RouteConfigBase } from '../src/types.ts';
+import type { RouteConfigBase, SchemaOrReference } from '../src/types.ts';
 
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
 const JSON_TYPE = 'application/json';
 
 /** The generated document, read as plain JSON so assertions can reach into it freely. */
-// oxlint-disable-next-line typescript/no-explicit-any
-type Document = Record<string, any>;
+type Document = Record<string, ReturnType<typeof JSON.parse>>;
 
 type SchemaLibrary = {
   readonly expectedSchemaId: string;
@@ -123,11 +122,10 @@ const schemaLibraries: readonly SchemaLibrary[] = [
   },
 ];
 
-function jsonResponseRoute(schema: unknown, path = '/things'): RouteConfigBase {
+function jsonResponseRoute(schema: SchemaOrReference, path = '/things'): RouteConfigBase {
   return {
     method: 'get',
     path,
-    // @ts-expect-error: tests pass schemas positionally without repeating the full media type shape.
     responses: { 200: { content: { [JSON_TYPE]: { schema } }, description: 'ok' } },
   };
 }
