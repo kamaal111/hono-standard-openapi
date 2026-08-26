@@ -19,8 +19,9 @@ export interface StandardOpenAPIHonoOptions<E extends Env> {
 type HonoInit<E extends Env> = ConstructorParameters<typeof Hono>[0] & StandardOpenAPIHonoOptions<E>;
 
 /** Any app, whatever it was parameterized with — used where apps are handled as peers. */
-// oxlint-disable-next-line typescript/no-explicit-any
-type AnyStandardOpenAPIHono = StandardOpenAPIHono<any, any, any>;
+type StandardOpenAPIHonoParent<E extends Env> = {
+  getDefaultHook(visited?: Set<StandardOpenAPIHonoParent<E>>): Hook<unknown, E, string, unknown> | undefined;
+};
 
 const JSON_CONTENT_TYPE = /^application\/([a-z\-.]+\+)?json/;
 
@@ -39,7 +40,7 @@ export class StandardOpenAPIHono<
 > extends Hono<E, S, BasePath> {
   readonly openAPIRegistry: OpenAPIRegistry;
   readonly defaultHook: StandardOpenAPIHonoOptions<E>['defaultHook'];
-  #parentApp?: AnyStandardOpenAPIHono | undefined;
+  #parentApp?: StandardOpenAPIHonoParent<E> | undefined;
 
   constructor(init?: HonoInit<E>) {
     super(init);
@@ -48,7 +49,7 @@ export class StandardOpenAPIHono<
   }
 
   /** Registers a route: mounts it, validates its request, and records it in the document. */
-  openapi<R extends RouteConfig>(
+  openapi<R extends RouteConfig<E>>(
     route: R,
     handler: RouteHandler<R, E>,
     hook?: Hook<unknown, E, string, unknown>,
@@ -57,18 +58,15 @@ export class StandardOpenAPIHono<
     if (hide !== true) this.openAPIRegistry.registerPath(documented);
 
     const effectiveHook: Hook<unknown, E, string, unknown> = (result, c) => {
-      const resolved = hook ?? this.#resolveDefaultHook();
+      const resolved = hook ?? this.getDefaultHook();
 
       return resolved?.(result, c);
     };
-    const handlers = [
-      ...normalizeMiddleware(middleware),
-      ...this.#buildValidators(route.request, effectiveHook),
-      handler,
-    ];
-
-    // @ts-expect-error: the handler chain is validated by `RouteHandler`, not by Hono's own inference.
-    this.on([route.method], [toRoutingPath(route.path)], ...handlers);
+    const methods = [route.method];
+    const paths = [toRoutingPath(route.path)];
+    for (const middlewareHandler of normalizeMiddleware<E>(middleware)) this.on(methods, paths, middlewareHandler);
+    for (const validator of this.#buildValidators(route.request, effectiveHook)) this.on(methods, paths, validator);
+    this.on(methods, paths, handler);
 
     return this;
   }
@@ -102,20 +100,14 @@ export class StandardOpenAPIHono<
   }
 
   /** The nearest hook, preferring this app's own and falling back to the app it is mounted under. */
-  #resolveDefaultHook(): Hook<unknown, E, string, unknown> | undefined {
+  getDefaultHook(
+    visited: Set<StandardOpenAPIHonoParent<E>> = new Set(),
+  ): Hook<unknown, E, string, unknown> | undefined {
     if (this.defaultHook != null) return this.defaultHook;
+    if (visited.has(this)) return undefined;
 
-    const visited = new Set<AnyStandardOpenAPIHono>([this]);
-    let ancestor = this.#parentApp;
-
-    while (ancestor != null && !visited.has(ancestor)) {
-      if (ancestor.defaultHook != null) return ancestor.defaultHook;
-
-      visited.add(ancestor);
-      ancestor = ancestor.#parentApp;
-    }
-
-    return undefined;
+    visited.add(this);
+    return this.#parentApp?.getDefaultHook(visited);
   }
 
   #buildValidators(
@@ -214,7 +206,7 @@ function propertyNamesOf(schema: StandardSchema): string[] {
   }
 }
 
-function normalizeMiddleware(middleware: RouteConfig['middleware']): MiddlewareHandler<Env>[] {
+function normalizeMiddleware<E extends Env>(middleware: RouteConfig<E>['middleware']): MiddlewareHandler<E>[] {
   if (middleware == null) return [];
   if (typeof middleware === 'function') return [middleware];
 
@@ -235,9 +227,13 @@ export type HonoToStandardOpenAPIHono<T> =
   T extends Hono<infer E, infer S, infer BasePath> ? StandardOpenAPIHono<E, S, BasePath> : T;
 
 /** Restores an app's type after Hono's own chaining methods widen it. */
-// oxlint-disable-next-line typescript/no-explicit-any
-export function $<T extends Hono<any, any, any>>(app: T): HonoToStandardOpenAPIHono<T> {
-  // @ts-expect-error: chaining only widens the type; the value is still this package's app.
+export function $<E extends Env, S extends Schema, BasePath extends string>(
+  app: Hono<E, S, BasePath>,
+): StandardOpenAPIHono<E, S, BasePath> {
+  if (!(app instanceof StandardOpenAPIHono)) {
+    throw new TypeError('The chaining helper only accepts a StandardOpenAPIHono instance.');
+  }
+
   return app;
 }
 

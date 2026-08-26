@@ -14,10 +14,18 @@ const JSON_TYPE = 'application/json';
 
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
 
-/** Reads a response body as plain JSON, so assertions can reach into it freely. */
-// oxlint-disable-next-line typescript/no-explicit-any
-async function readJson(response: Response): Promise<Record<string, any>> {
+/** Reads a response body as a JSON object. */
+async function readJson(response: Response): Promise<Record<string, unknown>> {
   return JSON.parse(await response.text());
+}
+
+function issueCount(body: Record<string, unknown>): number {
+  const error = body.error;
+  if (typeof error !== 'object' || error == null || !('issues' in error) || !Array.isArray(error.issues)) {
+    throw new TypeError('Expected the response to contain validation issues.');
+  }
+
+  return error.issues.length;
 }
 
 type SchemaLibrary = {
@@ -171,6 +179,10 @@ describe.each(schemaLibraries)('$name routing', library => {
     expect($(app)).toBe(app);
   });
 
+  it('rejects a plain Hono app in the chaining helper', () => {
+    expect(() => $(new Hono())).toThrow('The chaining helper only accepts a StandardOpenAPIHono instance.');
+  });
+
   it('serves routes that have no request schemas', async () => {
     const app = new StandardOpenAPIHono();
     app.openapi(createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'ok' } } }), c =>
@@ -193,7 +205,7 @@ describe.each(schemaLibraries)('$name validation', library => {
     expect(response.status).toBe(400);
     const body = await readJson(response);
     expect(body.success).toBe(false);
-    expect(body.error.issues.length).toBeGreaterThan(0);
+    expect(issueCount(body)).toBeGreaterThan(0);
   });
 
   it('hands failures to the hook the route was registered with', async () => {
@@ -268,6 +280,15 @@ describe.each(schemaLibraries)('$name validation', library => {
     root.route('/api', middle);
 
     expect((await root.request('/api/cards/not-a-uuid')).status).toBe(417);
+  });
+
+  it('stops looking for a default hook when mounted apps form a cycle', () => {
+    const first = new StandardOpenAPIHono();
+    const second = new StandardOpenAPIHono();
+    first.route('/second', second);
+    second.route('/first', first);
+
+    expect(first.getDefaultHook()).toBeUndefined();
   });
 
   it('matches header names however the caller cased them', async () => {

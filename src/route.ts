@@ -3,9 +3,9 @@ import type { Env, MiddlewareHandler } from 'hono';
 import type { ConvertPathType } from './type-inference.ts';
 import type { RouteConfigBase } from './types.ts';
 
-export interface RouteConfig extends RouteConfigBase {
+export interface RouteConfig<E extends Env = Env> extends RouteConfigBase {
   /** Middleware to run before this route's validators and handler. */
-  readonly middleware?: MiddlewareHandler<Env> | readonly MiddlewareHandler<Env>[] | undefined;
+  readonly middleware?: MiddlewareHandler<E> | readonly MiddlewareHandler<E>[] | undefined;
   /** Keeps the route out of the generated document while still serving it. */
   readonly hide?: boolean | undefined;
 }
@@ -29,7 +29,7 @@ export function createRoute<P extends string, R extends Omit<RouteConfig, 'path'
 }
 
 /** Rewrites `/cards/{cardId}` as `/cards/:cardId`, the same rewrite `ConvertPathType` describes. */
-export function toRoutingPath<P extends string>(path: P): ConvertPathType<P> {
-  // @ts-expect-error: the runtime rewrite is the one `ConvertPathType` performs in the type system.
+export function toRoutingPath<P extends string>(path: P): ConvertPathType<P>;
+export function toRoutingPath(path: string): string {
   return path.replaceAll(/\/{(.+?)}/g, '/:$1');
 }
