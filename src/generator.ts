@@ -18,6 +18,8 @@ export type OpenAPIVersion = '3.0' | '3.1';
 
 export interface GeneratorOptions {
   readonly version?: OpenAPIVersion;
+  /** Options forwarded to every Standard JSON Schema conversion in this document. */
+  readonly libraryOptions?: Record<string, unknown>;
   readonly normalization?: NormalizationOptions;
   /**
    * How `components.schemas` is ordered.
@@ -117,6 +119,7 @@ export class OpenAPIGenerator {
       components: this.#components,
       hoistRoot,
       io,
+      libraryOptions: this.#options.libraryOptions,
       name: this.#names.get(schema),
       normalization: this.#options.normalization,
       target: TARGETS[this.#options.version ?? '3.1'],
