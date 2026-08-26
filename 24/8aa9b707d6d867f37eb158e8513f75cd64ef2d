@@ -1,0 +1,21 @@
+src/type-inference.ts
+  s_19be2a2c540afd::t_f7c750de831010 1
+src/validator.ts
+  s_19be2a2c540afd::t_f7c750de831010 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "248aa9b707d6d867f37eb158e8513f75cd64ef2d",
+  "prompts": {},
+  "sessions": {
+    "s_19be2a2c540afd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a03ff1-a5c0-7960-b9e1-e05053a5fad0",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
