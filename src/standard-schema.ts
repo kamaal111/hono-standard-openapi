@@ -1,7 +1,5 @@
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/spec';
 
-export type { StandardJSONSchemaV1, StandardSchemaV1 };
-
 /**
  * A schema that can both validate values and describe itself as JSON Schema.
  *

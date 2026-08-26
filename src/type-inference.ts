@@ -1,7 +1,7 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { Env, Handler, MiddlewareHandler, TypedResponse, ValidationTargets } from 'hono';
 import type { StatusCode } from 'hono/utils/http-status';
 
-import type { StandardSchemaV1 } from './standard-schema.ts';
 import type { RouteConfigBase } from './types.ts';
 
 type HasUndefined<T> = undefined extends T ? true : false;

@@ -1,7 +1,6 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { Context, Env, MiddlewareHandler, ValidationTargets } from 'hono';
 import { validator } from 'hono/validator';
-
-import type { StandardSchemaV1 } from './standard-schema.ts';
 
 /** What a validation attempt produced, handed to a hook before the handler runs. */
 export type ValidationResult<T> =
