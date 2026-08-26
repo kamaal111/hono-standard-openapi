@@ -1,4 +1,6 @@
+import { toStandardJsonSchema } from '@valibot/to-json-schema';
 import { Hono } from 'hono';
+import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -18,19 +20,54 @@ async function readJson(response: Response): Promise<Record<string, any>> {
   return JSON.parse(await response.text());
 }
 
-const cardRoute = createRoute({
-  method: 'get',
-  path: '/cards/{cardId}',
-  request: { params: z.object({ cardId: z.uuid() }) },
-  responses: {
-    200: { content: { [JSON_TYPE]: { schema: z.object({ id: z.string() }) } }, description: 'ok' },
-  },
-});
+type SchemaLibrary = {
+  readonly name: string;
+  createCardResponse(): StandardSchema;
+  createCookieSchema(): StandardSchema;
+  createNameSchema(): StandardSchema;
+  createStringSchema(): StandardSchema;
+  createTokenHeaderSchema(): StandardSchema;
+  createUUIDParamsSchema(): StandardSchema;
+};
 
-describe('routing', () => {
+const schemaLibraries: readonly SchemaLibrary[] = [
+  {
+    name: 'Zod',
+    createCardResponse: () => z.object({ id: z.string() }),
+    createCookieSchema: () => z.object({ session: z.string() }),
+    createNameSchema: () => z.object({ name: z.string() }),
+    createStringSchema: () => z.string(),
+    createTokenHeaderSchema: () => z.object({ 'x-token': z.string() }),
+    createUUIDParamsSchema: () => z.object({ cardId: z.uuid() }),
+  },
+  {
+    name: 'Valibot',
+    createCardResponse: () => toStandardJsonSchema(v.object({ id: v.string() })),
+    createCookieSchema: () => toStandardJsonSchema(v.object({ session: v.string() })),
+    createNameSchema: () => toStandardJsonSchema(v.object({ name: v.string() })),
+    createStringSchema: () => toStandardJsonSchema(v.string()),
+    createTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'x-token': v.string() })),
+    createUUIDParamsSchema: () => toStandardJsonSchema(v.object({ cardId: v.pipe(v.string(), v.uuid()) })),
+  },
+];
+
+function createCardRoute(library: SchemaLibrary) {
+  return createRoute({
+    method: 'get',
+    path: '/cards/{cardId}',
+    request: { params: library.createUUIDParamsSchema() },
+    responses: {
+      200: { content: { [JSON_TYPE]: { schema: library.createCardResponse() } }, description: 'ok' },
+    },
+  });
+}
+
+describe.each(schemaLibraries)('$name routing', library => {
+  const cardRoute = createCardRoute(library);
+
   it('serves an OpenAPI path as a Hono path', async () => {
     const app = new StandardOpenAPIHono();
-    app.openapi(cardRoute, c => c.json({ id: c.req.valid('param').cardId }));
+    app.openapi(cardRoute, c => c.json({ id: '550e8400-e29b-41d4-a716-446655440000' }));
 
     const response = await app.request('/cards/550e8400-e29b-41d4-a716-446655440000');
 
@@ -144,7 +181,9 @@ describe('routing', () => {
   });
 });
 
-describe('validation', () => {
+describe.each(schemaLibraries)('$name validation', library => {
+  const cardRoute = createCardRoute(library);
+
   it('answers a bad request with the issues that were found', async () => {
     const app = new StandardOpenAPIHono();
     app.openapi(cardRoute, c => c.json({ id: 'x' }));
@@ -236,10 +275,10 @@ describe('validation', () => {
     const route = createRoute({
       method: 'get',
       path: '/whoami',
-      request: { headers: z.object({ 'x-token': z.string() }) },
+      request: { headers: library.createTokenHeaderSchema() },
       responses: { 200: { description: 'ok' } },
     });
-    app.openapi(route, c => c.json({ token: c.req.valid('header')['x-token'] }));
+    app.openapi(route, c => c.json({ token: c.req.header('x-token') }));
 
     const response = await app.request('/whoami', { headers: { 'X-Token': 'shouted' } });
 
@@ -251,10 +290,10 @@ describe('validation', () => {
     const route = createRoute({
       method: 'post',
       path: '/things',
-      request: { body: { content: { [JSON_TYPE]: { schema: z.object({ name: z.string() }) } } } },
+      request: { body: { content: { [JSON_TYPE]: { schema: library.createNameSchema() } } } },
       responses: { 200: { description: 'ok' } },
     });
-    app.openapi(route, c => c.json({ body: c.req.valid('json') }));
+    app.openapi(route, c => c.json({ body: {} }));
 
     const response = await app.request('/things', { method: 'post' });
 
@@ -268,11 +307,11 @@ describe('validation', () => {
       method: 'post',
       path: '/things',
       request: {
-        body: { content: { [JSON_TYPE]: { schema: z.object({ name: z.string() }) } }, required: true },
+        body: { content: { [JSON_TYPE]: { schema: library.createNameSchema() } }, required: true },
       },
       responses: { 200: { description: 'ok' } },
     });
-    app.openapi(route, c => c.json({ body: c.req.valid('json') }));
+    app.openapi(route, c => c.json({ body: {} }));
 
     const response = await app.request('/things', {
       body: JSON.stringify({ name: 42 }),
@@ -288,10 +327,12 @@ describe('validation', () => {
     const route = createRoute({
       method: 'post',
       path: '/things',
-      request: { body: { content: { [`${JSON_TYPE}; charset=utf-8`]: { schema: z.object({ name: z.string() }) } } } },
+      request: {
+        body: { content: { [`${JSON_TYPE}; charset=utf-8`]: { schema: library.createNameSchema() } } },
+      },
       responses: { 200: { description: 'ok' } },
     });
-    app.openapi(route, c => c.json({ body: c.req.valid('json') }));
+    app.openapi(route, c => c.json({ body: { name: 'thing' } }));
 
     const response = await app.request('/things', {
       body: JSON.stringify({ name: 'thing' }),
@@ -308,11 +349,11 @@ describe('validation', () => {
       method: 'post',
       path: '/forms',
       request: {
-        body: { content: { 'application/x-www-form-urlencoded': { schema: z.object({ name: z.string() }) } } },
+        body: { content: { 'application/x-www-form-urlencoded': { schema: library.createNameSchema() } } },
       },
       responses: { 200: { description: 'ok' } },
     });
-    app.openapi(route, c => c.json({ body: c.req.valid('form') }));
+    app.openapi(route, c => c.json({ body: { name: 'thing' } }));
 
     const response = await app.request('/forms', {
       body: new URLSearchParams({ name: 'thing' }),
@@ -330,7 +371,7 @@ describe('validation', () => {
       request: {
         body: {
           content: {
-            'application/octet-stream': { schema: z.string() },
+            'application/octet-stream': { schema: library.createStringSchema() },
             'text/plain': { schema: { type: 'string' } },
           },
         },
@@ -360,10 +401,10 @@ describe('validation', () => {
     const route = createRoute({
       method: 'get',
       path: '/session',
-      request: { cookies: z.object({ session: z.string() }), headers: throwingSchema },
+      request: { cookies: library.createCookieSchema(), headers: throwingSchema },
       responses: { 200: { description: 'ok' } },
     });
-    app.openapi(route, c => c.json({ session: c.req.valid('cookie').session }));
+    app.openapi(route, c => c.json({ session: c.req.header('cookie')?.replace('session=', '') }));
 
     const response = await app.request('/session', { headers: { cookie: 'session=abc' } });
 

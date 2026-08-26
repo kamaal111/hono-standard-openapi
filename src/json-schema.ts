@@ -130,6 +130,8 @@ export interface ConvertOptions {
   readonly io: SchemaIO;
   readonly target: JSONSchemaTarget;
   readonly components: ComponentCollector;
+  /** Vendor-specific conversion options defined by Standard JSON Schema. */
+  readonly libraryOptions?: Record<string, unknown> | undefined;
   readonly normalization?: NormalizationOptions | undefined;
   /** Name for the schema itself, for schemas that don't name themselves through `$id`. */
   readonly name?: string | undefined;
@@ -153,7 +155,7 @@ export function convertSchema(schema: unknown, options: ConvertOptions): JSONSch
     throw new UnsupportedSchemaError(isStandardSchemaLike(schema) ? schema['~standard'].vendor : undefined);
   }
 
-  const raw = describe(schema, options.io, options.target);
+  const raw = describe(schema, options.io, options.target, options.libraryOptions);
   const context: WalkContext = {
     components: options.components,
     normalization: { ...DEFAULT_NORMALIZATION, ...options.normalization },
@@ -173,8 +175,13 @@ export function convertSchema(schema: unknown, options: ConvertOptions): JSONSch
   return walk(named, context);
 }
 
-function describe(schema: StandardSchema, io: SchemaIO, target: JSONSchemaTarget): JSONSchema {
-  const converted = schema['~standard'].jsonSchema[io]({ target });
+function describe(
+  schema: StandardSchema,
+  io: SchemaIO,
+  target: JSONSchemaTarget,
+  libraryOptions: Record<string, unknown> | undefined,
+): JSONSchema {
+  const converted = schema['~standard'].jsonSchema[io]({ libraryOptions, target });
   const { $schema: _dialect, ...rest } = converted;
 
   return rest;

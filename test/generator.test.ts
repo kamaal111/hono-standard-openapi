@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
 
 import { standardSchema } from './helpers.ts';
 import { ComponentNameConflictError, UnsupportedSchemaError } from '../src/errors.ts';
@@ -34,7 +33,15 @@ function jsonResponseRoute(schema: unknown, path = '/things'): RouteConfigBase {
 
 describe('component naming', () => {
   it('hoists a schema that names itself through $id', () => {
-    const Thing = z.object({ name: z.string() }).meta({ $id: 'Thing', title: 'Thing' });
+    const Thing = standardSchema({
+      output: {
+        $id: 'Thing',
+        properties: { name: { type: 'string' } },
+        required: ['name'],
+        title: 'Thing',
+        type: 'object',
+      },
+    });
 
     const document = documentFor(jsonResponseRoute(Thing));
 
@@ -50,7 +57,11 @@ describe('component naming', () => {
   });
 
   it('keeps a schema inline when it does not name itself', () => {
-    const document = documentFor(jsonResponseRoute(z.object({ name: z.string() })));
+    const document = documentFor(
+      jsonResponseRoute(
+        standardSchema({ output: { properties: { name: { type: 'string' } }, required: ['name'], type: 'object' } }),
+      ),
+    );
 
     expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
       properties: { name: { type: 'string' } },
@@ -61,8 +72,15 @@ describe('component naming', () => {
   });
 
   it('names a nested schema from its definition key when it has no $id', () => {
-    const Inner = z.object({ value: z.string() }).meta({ id: 'Inner' });
-    const Outer = z.object({ inner: Inner }).meta({ $id: 'Outer' });
+    const Outer = standardSchema({
+      output: {
+        $defs: { Inner: { properties: { value: { type: 'string' } }, required: ['value'], type: 'object' } },
+        $id: 'Outer',
+        properties: { inner: { $ref: '#/$defs/Inner' } },
+        required: ['inner'],
+        type: 'object',
+      },
+    });
 
     const document = documentFor(jsonResponseRoute(Outer));
 
@@ -75,8 +93,20 @@ describe('component naming', () => {
   });
 
   it('shares one component between a nested use and a top-level use', () => {
-    const Shared = z.object({ value: z.string() }).meta({ $id: 'Shared', id: 'Shared' });
-    const Outer = z.object({ shared: Shared }).meta({ $id: 'Outer' });
+    const Shared = standardSchema({
+      output: { $id: 'Shared', properties: { value: { type: 'string' } }, required: ['value'], type: 'object' },
+    });
+    const Outer = standardSchema({
+      output: {
+        $defs: {
+          Shared: { $id: 'Shared', properties: { value: { type: 'string' } }, required: ['value'], type: 'object' },
+        },
+        $id: 'Outer',
+        properties: { shared: { $ref: '#/$defs/Shared' } },
+        required: ['shared'],
+        type: 'object',
+      },
+    });
 
     const document = documentFor(jsonResponseRoute(Outer, '/outer'), jsonResponseRoute(Shared, '/shared'));
 
@@ -87,7 +117,9 @@ describe('component naming', () => {
   });
 
   it('names a schema registered on the registry even though it has no $id', () => {
-    const Thing = z.object({ name: z.string() });
+    const Thing = standardSchema({
+      output: { properties: { name: { type: 'string' } }, required: ['name'], type: 'object' },
+    });
     const registry = new OpenAPIRegistry();
     registry.register('Thing', Thing);
     registry.registerPath(jsonResponseRoute(Thing));
@@ -98,8 +130,12 @@ describe('component naming', () => {
   });
 
   it('rejects two different schemas claiming the same name', () => {
-    const first = z.object({ a: z.string() }).meta({ $id: 'Same' });
-    const second = z.object({ b: z.string() }).meta({ $id: 'Same' });
+    const first = standardSchema({
+      output: { $id: 'Same', properties: { a: { type: 'string' } }, required: ['a'], type: 'object' },
+    });
+    const second = standardSchema({
+      output: { $id: 'Same', properties: { b: { type: 'string' } }, required: ['b'], type: 'object' },
+    });
 
     expect(() => documentFor(jsonResponseRoute(first, '/first'), jsonResponseRoute(second, '/second'))).toThrow(
       ComponentNameConflictError,
@@ -115,8 +151,24 @@ describe('component naming', () => {
 
 describe('normalization', () => {
   it('drops the strictness marker but keeps a permissive additionalProperties', () => {
-    const Strict = z.object({ a: z.string() }).meta({ $id: 'Strict' });
-    const Loose = z.object({ a: z.string() }).loose().meta({ $id: 'Loose' });
+    const Strict = standardSchema({
+      output: {
+        $id: 'Strict',
+        additionalProperties: false,
+        properties: { a: { type: 'string' } },
+        required: ['a'],
+        type: 'object',
+      },
+    });
+    const Loose = standardSchema({
+      output: {
+        $id: 'Loose',
+        additionalProperties: {},
+        properties: { a: { type: 'string' } },
+        required: ['a'],
+        type: 'object',
+      },
+    });
 
     const document = documentFor(jsonResponseRoute(Strict, '/strict'), jsonResponseRoute(Loose, '/loose'));
 
@@ -125,7 +177,17 @@ describe('normalization', () => {
   });
 
   it('drops a pattern implied by a format but keeps an explicit one', () => {
-    const Thing = z.object({ id: z.uuid(), slug: z.string().regex(/^[a-z]+$/) }).meta({ $id: 'Thing' });
+    const Thing = standardSchema({
+      output: {
+        $id: 'Thing',
+        properties: {
+          id: { format: 'uuid', pattern: 'uuid-pattern', type: 'string' },
+          slug: { pattern: '^[a-z]+$', type: 'string' },
+        },
+        required: ['id', 'slug'],
+        type: 'object',
+      },
+    });
 
     const properties = documentFor(jsonResponseRoute(Thing)).components?.schemas?.Thing?.properties;
 
@@ -134,7 +196,14 @@ describe('normalization', () => {
   });
 
   it('collapses a nullable union into a nullable type', () => {
-    const Thing = z.object({ notes: z.string().max(10).nullable() }).meta({ $id: 'Thing' });
+    const Thing = standardSchema({
+      output: {
+        $id: 'Thing',
+        properties: { notes: { anyOf: [{ maxLength: 10, type: 'string' }, { type: 'null' }] } },
+        required: ['notes'],
+        type: 'object',
+      },
+    });
 
     const properties = documentFor(jsonResponseRoute(Thing)).components?.schemas?.Thing?.properties;
 
@@ -142,7 +211,14 @@ describe('normalization', () => {
   });
 
   it('rewrites a constant as a single-value enum', () => {
-    const Thing = z.object({ kind: z.literal('only') }).meta({ $id: 'Thing' });
+    const Thing = standardSchema({
+      output: {
+        $id: 'Thing',
+        properties: { kind: { const: 'only', type: 'string' } },
+        required: ['kind'],
+        type: 'object',
+      },
+    });
 
     const properties = documentFor(jsonResponseRoute(Thing)).components?.schemas?.Thing?.properties;
 
@@ -150,7 +226,15 @@ describe('normalization', () => {
   });
 
   it('leaves the schema library output alone when normalization is switched off', () => {
-    const Thing = z.object({ kind: z.literal('only') }).meta({ $id: 'Thing' });
+    const Thing = standardSchema({
+      output: {
+        $id: 'Thing',
+        additionalProperties: false,
+        properties: { kind: { const: 'only', type: 'string' } },
+        required: ['kind'],
+        type: 'object',
+      },
+    });
     const registry = new OpenAPIRegistry();
     registry.registerPath(jsonResponseRoute(Thing));
 
@@ -169,8 +253,16 @@ describe('parameters', () => {
       method: 'get',
       path: '/cards/{cardId}',
       request: {
-        params: z.object({ cardId: z.uuid().meta({ description: 'Card identifier' }) }),
-        query: z.object({ game: z.enum(['one_piece', 'pokemon']).optional() }),
+        params: standardSchema({
+          input: {
+            properties: { cardId: { description: 'Card identifier', format: 'uuid', type: 'string' } },
+            required: ['cardId'],
+            type: 'object',
+          },
+        }),
+        query: standardSchema({
+          input: { properties: { game: { enum: ['one_piece', 'pokemon'], type: 'string' } }, type: 'object' },
+        }),
       },
       responses: { 200: { description: 'ok' } },
     };
@@ -198,7 +290,7 @@ describe('parameters', () => {
     const route: RouteConfigBase = {
       method: 'get',
       path: '/cards/{cardId}',
-      request: { params: z.object({ cardId: z.string().optional() }) },
+      request: { params: standardSchema({ input: { properties: { cardId: { type: 'string' } }, type: 'object' } }) },
       responses: { 200: { description: 'ok' } },
     };
 
@@ -212,7 +304,13 @@ describe('parameters', () => {
       responses: {
         200: {
           description: 'ok',
-          headers: z.object({ 'set-auth-token': z.string().meta({ description: 'Token' }) }),
+          headers: standardSchema({
+            output: {
+              properties: { 'set-auth-token': { description: 'Token', type: 'string' } },
+              required: ['set-auth-token'],
+              type: 'object',
+            },
+          }),
         },
       },
     };
@@ -283,7 +381,10 @@ describe('document assembly', () => {
   });
 
   it('describes a request body from the input side of the schema', () => {
-    const Payload = z.object({ notes: z.string().transform(notes => notes.trim()) }).meta({ $id: 'Payload' });
+    const Payload = standardSchema({
+      input: { $id: 'Payload', properties: { notes: { type: 'string' } }, required: ['notes'], type: 'object' },
+      output: { $id: 'Payload', properties: { notes: { type: 'string' } }, required: ['notes'], type: 'object' },
+    });
     const route: RouteConfigBase = {
       method: 'post',
       path: '/things',
@@ -312,8 +413,16 @@ describe('document assembly', () => {
   });
 
   it('places a schema ahead of the schemas it refers to', () => {
-    const Part = z.object({ value: z.string() }).meta({ $id: 'Part', id: 'Part' });
-    const Whole = z.object({ part: Part }).meta({ $id: 'Whole' });
+    const Whole = standardSchema({
+      output: {
+        $id: 'Whole',
+        properties: {
+          part: { $id: 'Part', properties: { value: { type: 'string' } }, required: ['value'], type: 'object' },
+        },
+        required: ['part'],
+        type: 'object',
+      },
+    });
 
     const document = documentFor(jsonResponseRoute(Whole));
 
@@ -321,9 +430,23 @@ describe('document assembly', () => {
   });
 
   it('orders components the way a reader first meets them', () => {
-    const Deep = z.object({ value: z.string() }).meta({ $id: 'Deep', id: 'Deep' });
-    const Middle = z.object({ deep: Deep }).meta({ $id: 'Middle', id: 'Middle' });
-    const Top = z.object({ middle: Middle }).meta({ $id: 'Top' });
+    const Top = standardSchema({
+      output: {
+        $id: 'Top',
+        properties: {
+          middle: {
+            $id: 'Middle',
+            properties: {
+              deep: { $id: 'Deep', properties: { value: { type: 'string' } }, required: ['value'], type: 'object' },
+            },
+            required: ['deep'],
+            type: 'object',
+          },
+        },
+        required: ['middle'],
+        type: 'object',
+      },
+    });
 
     const registry = new OpenAPIRegistry();
     registry.registerPath(jsonResponseRoute(Top));
@@ -335,8 +458,8 @@ describe('document assembly', () => {
   });
 
   it('accepts definition arrays and alphabetizes generated schemas', () => {
-    const Alpha = z.string().meta({ $id: 'Alpha' });
-    const Zulu = z.string().meta({ $id: 'Zulu' });
+    const Alpha = standardSchema({ output: { $id: 'Alpha', type: 'string' } });
+    const Zulu = standardSchema({ output: { $id: 'Zulu', type: 'string' } });
     const definitions = [
       { name: 'Zulu', schema: Zulu, type: 'schema' as const },
       { name: 'Alpha', schema: Alpha, type: 'schema' as const },
