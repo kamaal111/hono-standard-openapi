@@ -18,9 +18,7 @@ export { type RouteConfig, createRoute, toRoutingPath } from './route.ts';
 export {
   type JSONSchema,
   type SchemaIO,
-  type StandardJSONSchemaV1,
   type StandardSchema,
-  type StandardSchemaV1,
   isStandardJSONSchema,
   isStandardSchema,
 } from './standard-schema.ts';
