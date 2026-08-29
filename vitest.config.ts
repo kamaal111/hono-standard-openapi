@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 const config = defineConfig({
   test: {
+    include: ['test/**/*.test.ts'],
     coverage: {
       include: ['src/**/*.ts'],
       provider: 'v8',

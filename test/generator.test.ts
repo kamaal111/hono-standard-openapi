@@ -17,7 +17,9 @@ const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1'
 
 function documentFor(...routes: RouteConfigBase[]): Document {
   const registry = new OpenAPIRegistry();
-  for (const route of routes) registry.registerPath(route);
+  for (const route of routes) {
+    registry.registerPath(route);
+  }
 
   return new OpenAPIGenerator(registry).generateDocument(DOC_CONFIG);
 }
@@ -364,6 +366,26 @@ describe('document assembly', () => {
       summary: 'List',
       tags: ['Things'],
     });
+  });
+
+  it('orders operation keys alphabetically', () => {
+    const route: RouteConfigBase = {
+      method: 'get',
+      path: '/things',
+      tags: ['Things'],
+      summary: 'List',
+      security: [{ bearerAuth: [] }],
+      responses: { 200: { description: 'ok' } },
+      description: 'Lists things',
+    };
+
+    expect(Object.keys(documentFor(route).paths?.['/things']?.get ?? {})).toEqual([
+      'description',
+      'responses',
+      'security',
+      'summary',
+      'tags',
+    ]);
   });
 
   it('merges several methods onto one path', () => {

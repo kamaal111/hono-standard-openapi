@@ -1,5 +1,4 @@
-import type { ReferenceObject } from 'openapi3-ts/oas31';
-
+import type { JsonObject } from './json-value.ts';
 import type { StandardSchema } from './standard-schema.ts';
 import type { RouteConfigBase } from './types.ts';
 
@@ -23,7 +22,7 @@ export type OpenAPIDefinition =
       readonly type: 'component';
       readonly componentType: ComponentType;
       readonly name: string;
-      readonly component: object;
+      readonly component: JsonObject;
     }
   | { readonly type: 'schema'; readonly schema: StandardSchema; readonly name: string }
   | { readonly type: 'route'; readonly route: RouteConfigBase }
@@ -61,11 +60,15 @@ export class OpenAPIRegistry {
 
   nameOf(schema: StandardSchema): string | undefined {
     const own = this.#names.get(schema);
-    if (own != null) return own;
+    if (own != null) {
+      return own;
+    }
 
     for (const parent of this.#parents) {
       const inherited = parent.nameOf(schema);
-      if (inherited != null) return inherited;
+      if (inherited != null) {
+        return inherited;
+      }
     }
 
     return undefined;
@@ -79,11 +82,7 @@ export class OpenAPIRegistry {
     this.#definitions.push({ type: 'webhook', webhook });
   }
 
-  registerComponent<T extends ComponentType>(
-    componentType: T,
-    name: string,
-    component: object,
-  ): { name: string; ref: ReferenceObject } {
+  registerComponent<T extends ComponentType>(componentType: T, name: string, component: JsonObject) {
     this.#definitions.push({ component, componentType, name, type: 'component' });
 
     return { name, ref: { $ref: `#/components/${componentType}/${name}` } };

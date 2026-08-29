@@ -9,30 +9,37 @@ import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/sp
 export type StandardSchema = StandardSchemaV1 & StandardJSONSchemaV1;
 
 /** A JSON Schema document fragment, as produced by a Standard JSON Schema converter. */
-export type JSONSchema = Record<string, unknown>;
+export type JSONSchema = ReturnType<StandardJSONSchemaV1.Converter['input']>;
+
+/** One value inside a JSON Schema fragment: a keyword's value, or a nested schema. */
+export type SchemaValue = JSONSchema[string];
 
 /** Which side of a schema to describe: what a request accepts, or what a response produces. */
 export type SchemaIO = 'input' | 'output';
 
-export function isStandardSchema(value: unknown): value is StandardSchemaV1 {
-  if (typeof value !== 'object' || value == null || !('~standard' in value)) return false;
+export function isStandardSchema<T>(value: T): value is T & StandardSchemaV1 {
+  if (typeof value !== 'object' || value == null || !('~standard' in value)) {
+    return false;
+  }
 
   const props: unknown = value['~standard'];
 
   return typeof props === 'object' && props != null && 'version' in props && props.version === 1;
 }
 
-export function isStandardJSONSchema(value: unknown): value is StandardSchema {
-  if (!isStandardSchema(value)) return false;
+export function isStandardJSONSchema<T>(value: T): value is T & StandardSchema {
+  if (!isStandardSchema(value)) {
+    return false;
+  }
 
   const props: StandardSchemaV1.Props & { jsonSchema?: unknown } = value['~standard'];
 
   return typeof props.jsonSchema === 'object' && props.jsonSchema != null;
 }
 
-export function validateWithStandardSchema(
+export function validateWithStandardSchema<V>(
   schema: StandardSchemaV1,
-  value: unknown,
+  value: V,
 ): StandardSchemaV1.Result<unknown> | Promise<StandardSchemaV1.Result<unknown>> {
   return schema['~standard'].validate(value);
 }

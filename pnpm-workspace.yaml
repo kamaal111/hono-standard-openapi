@@ -1,0 +1,2 @@
+minimumReleaseAgeExclude:
+  - '@kamaal111/oxlint-plugin-anti-slop@0.0.3'

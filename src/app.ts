@@ -51,7 +51,9 @@ export class StandardOpenAPIHono<
   /** Registers a route: mounts it, validates its request, and records it in the document. */
   openapi<R extends RouteConfig<E>>(route: R, handler: RouteHandler<R, E>, hook?: Hook<unknown, E, string>): this {
     const { hide, middleware, ...documented } = route;
-    if (hide !== true) this.openAPIRegistry.registerPath(documented);
+    if (hide !== true) {
+      this.openAPIRegistry.registerPath(documented);
+    }
 
     const effectiveHook: Hook<unknown, E, string> = (result, c) => {
       const resolved = hook ?? this.getDefaultHook();
@@ -60,8 +62,12 @@ export class StandardOpenAPIHono<
     };
     const methods = [route.method];
     const paths = [toRoutingPath(route.path)];
-    for (const middlewareHandler of normalizeMiddleware<E>(middleware)) this.on(methods, paths, middlewareHandler);
-    for (const validator of this.#buildValidators(route.request, effectiveHook)) this.on(methods, paths, validator);
+    for (const middlewareHandler of normalizeMiddleware<E>(middleware)) {
+      this.on(methods, paths, middlewareHandler);
+    }
+    for (const validator of this.#buildValidators(route.request, effectiveHook)) {
+      this.on(methods, paths, validator);
+    }
     this.on(methods, paths, handler);
 
     return this;
@@ -97,26 +103,36 @@ export class StandardOpenAPIHono<
 
   /** The nearest hook, preferring this app's own and falling back to the app it is mounted under. */
   getDefaultHook(visited: Set<StandardOpenAPIHonoParent<E>> = new Set()): Hook<unknown, E, string> | undefined {
-    if (this.defaultHook != null) return this.defaultHook;
-    if (visited.has(this)) return undefined;
+    if (this.defaultHook != null) {
+      return this.defaultHook;
+    }
+    if (visited.has(this)) {
+      return undefined;
+    }
 
     visited.add(this);
     return this.#parentApp?.getDefaultHook(visited);
   }
 
   #buildValidators(request: RouteRequest | undefined, hook: Hook<unknown, E, string>): Handler<E, string>[] {
-    if (request == null) return [];
+    if (request == null) {
+      return [];
+    }
 
     const validators: Handler<E, string>[] = [];
     for (const { key, target } of VALIDATED_PARTS) {
       const schema = request[key];
-      if (schema == null) continue;
+      if (schema == null) {
+        continue;
+      }
 
       validators.push(sValidator(target, schema, hook));
     }
 
     const body = request.body;
-    if (body != null) validators.push(...buildBodyValidators(body.content, body.required === true, hook));
+    if (body != null) {
+      validators.push(...buildBodyValidators(body.content, body.required === true, hook));
+    }
 
     return validators;
   }
@@ -138,14 +154,18 @@ function buildBodyValidators<E extends Env>(
 
   for (const [mediaType, media] of Object.entries(content)) {
     const schema = media.schema;
-    if (!isStandardJSONSchema(schema)) continue;
+    if (!isStandardJSONSchema(schema)) {
+      continue;
+    }
 
     const target = JSON_CONTENT_TYPE.test(mediaType)
       ? 'json'
       : FORM_CONTENT_TYPES.some(formType => mediaType.startsWith(formType))
         ? 'form'
         : undefined;
-    if (target == null) continue;
+    if (target == null) {
+      continue;
+    }
 
     const validator = sValidator(target, schema, hook);
     validators.push(required ? validator : skipWhenBodyAbsent(validator, mediaType, target));
@@ -179,9 +199,19 @@ function skipWhenBodyAbsent<E extends Env>(
   };
 }
 
+function isMiddlewareHandler<E extends Env>(
+  value: MiddlewareHandler<E> | ReadonlyArray<MiddlewareHandler<E>>,
+): value is MiddlewareHandler<E> {
+  return !Array.isArray(value);
+}
+
 function normalizeMiddleware<E extends Env>(middleware: RouteConfig<E>['middleware']): MiddlewareHandler<E>[] {
-  if (middleware == null) return [];
-  if (typeof middleware === 'function') return [middleware];
+  if (middleware == null) {
+    return [];
+  }
+  if (isMiddlewareHandler(middleware)) {
+    return [middleware];
+  }
 
   return [...middleware];
 }

@@ -1,5 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type {
+  EncodingObject,
+  ExamplesObject,
   HeadersObject,
   LinksObject,
   OperationObject,
@@ -20,8 +22,8 @@ export type SchemaOrReference = StandardSchemaV1 | SchemaObject | ReferenceObjec
 export interface MediaTypeObject {
   readonly schema?: SchemaOrReference | undefined;
   readonly example?: unknown;
-  readonly examples?: Record<string, unknown> | undefined;
-  readonly encoding?: Record<string, unknown> | undefined;
+  readonly examples?: ExamplesObject | undefined;
+  readonly encoding?: EncodingObject | undefined;
 }
 
 export type ContentObject = Record<string, MediaTypeObject>;
