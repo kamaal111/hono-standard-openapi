@@ -42,4 +42,4 @@ export type {
   SchemaObject,
   SchemaOrReference,
 } from './types.ts';
-export { type Hook, type ValidationResult, standardValidator } from './validator.ts';
+export { flattenErrors, type Hook, sValidator } from '@hono/standard-validator';

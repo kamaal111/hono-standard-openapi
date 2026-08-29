@@ -1,26 +1,26 @@
+import { type Hook, sValidator } from '@hono/standard-validator';
 import { type Env, Hono, type MiddlewareHandler, type Schema, type ValidationTargets } from 'hono';
+import type { Handler } from 'hono/types';
 import { mergePath } from 'hono/utils/url';
 import type { OpenAPIObject } from 'openapi3-ts/oas31';
 
 import { type DocumentConfig, type GeneratorOptions, OpenAPIGenerator } from './generator.ts';
-import { ComponentCollector, convertSchema } from './json-schema.ts';
 import { OpenAPIRegistry } from './registry.ts';
 import type { RouteConfig } from './route.ts';
-import { type StandardSchema, isStandardJSONSchema } from './standard-schema.ts';
+import { isStandardJSONSchema } from './standard-schema.ts';
 import type { RouteHandler } from './type-inference.ts';
 import { type ContentObject, PARAMETER_SOURCES, type RouteRequest } from './types.ts';
-import { type Hook, standardValidator } from './validator.ts';
 
 export interface StandardOpenAPIHonoOptions<E extends Env> {
   /** Runs for every validation on this app, and on apps mounted under it that define none. */
-  readonly defaultHook?: Hook<unknown, E, string, unknown>;
+  readonly defaultHook?: Hook<unknown, E, string>;
 }
 
 type HonoInit<E extends Env> = ConstructorParameters<typeof Hono>[0] & StandardOpenAPIHonoOptions<E>;
 
 /** Any app, whatever it was parameterized with — used where apps are handled as peers. */
 type StandardOpenAPIHonoParent<E extends Env> = {
-  getDefaultHook(visited?: Set<StandardOpenAPIHonoParent<E>>): Hook<unknown, E, string, unknown> | undefined;
+  getDefaultHook(visited?: Set<StandardOpenAPIHonoParent<E>>): Hook<unknown, E, string> | undefined;
 };
 
 const JSON_CONTENT_TYPE = /^application\/([a-z\-.]+\+)?json/;
@@ -49,15 +49,11 @@ export class StandardOpenAPIHono<
   }
 
   /** Registers a route: mounts it, validates its request, and records it in the document. */
-  openapi<R extends RouteConfig<E>>(
-    route: R,
-    handler: RouteHandler<R, E>,
-    hook?: Hook<unknown, E, string, unknown>,
-  ): this {
+  openapi<R extends RouteConfig<E>>(route: R, handler: RouteHandler<R, E>, hook?: Hook<unknown, E, string>): this {
     const { hide, middleware, ...documented } = route;
     if (hide !== true) this.openAPIRegistry.registerPath(documented);
 
-    const effectiveHook: Hook<unknown, E, string, unknown> = (result, c) => {
+    const effectiveHook: Hook<unknown, E, string> = (result, c) => {
       const resolved = hook ?? this.getDefaultHook();
 
       return resolved?.(result, c);
@@ -100,9 +96,7 @@ export class StandardOpenAPIHono<
   }
 
   /** The nearest hook, preferring this app's own and falling back to the app it is mounted under. */
-  getDefaultHook(
-    visited: Set<StandardOpenAPIHonoParent<E>> = new Set(),
-  ): Hook<unknown, E, string, unknown> | undefined {
+  getDefaultHook(visited: Set<StandardOpenAPIHonoParent<E>> = new Set()): Hook<unknown, E, string> | undefined {
     if (this.defaultHook != null) return this.defaultHook;
     if (visited.has(this)) return undefined;
 
@@ -110,18 +104,15 @@ export class StandardOpenAPIHono<
     return this.#parentApp?.getDefaultHook(visited);
   }
 
-  #buildValidators(
-    request: RouteRequest | undefined,
-    hook: Hook<unknown, E, string, unknown>,
-  ): MiddlewareHandler<E, string>[] {
+  #buildValidators(request: RouteRequest | undefined, hook: Hook<unknown, E, string>): Handler<E, string>[] {
     if (request == null) return [];
 
-    const validators: MiddlewareHandler<E, string>[] = [];
+    const validators: Handler<E, string>[] = [];
     for (const { key, target } of VALIDATED_PARTS) {
       const schema = request[key];
       if (schema == null) continue;
 
-      validators.push(standardValidator(target, schema, propertyNamesOf(schema), hook));
+      validators.push(sValidator(target, schema, hook));
     }
 
     const body = request.body;
@@ -141,9 +132,9 @@ const VALIDATED_PARTS = [
 function buildBodyValidators<E extends Env>(
   content: ContentObject,
   required: boolean,
-  hook: Hook<unknown, E, string, unknown>,
-): MiddlewareHandler<E, string>[] {
-  const validators: MiddlewareHandler<E, string>[] = [];
+  hook: Hook<unknown, E, string>,
+): Handler<E, string>[] {
+  const validators: Handler<E, string>[] = [];
 
   for (const [mediaType, media] of Object.entries(content)) {
     const schema = media.schema;
@@ -156,7 +147,7 @@ function buildBodyValidators<E extends Env>(
         : undefined;
     if (target == null) continue;
 
-    const validator = standardValidator<E, string>(target, schema, propertyNamesOf(schema), hook);
+    const validator = sValidator(target, schema, hook);
     validators.push(required ? validator : skipWhenBodyAbsent(validator, mediaType, target));
   }
 
@@ -170,10 +161,10 @@ function buildBodyValidators<E extends Env>(
  * whether or not the caller supplied it.
  */
 function skipWhenBodyAbsent<E extends Env>(
-  validator: MiddlewareHandler<E, string>,
+  validator: Handler<E, string>,
   mediaType: string,
   target: 'json' | 'form',
-): MiddlewareHandler<E, string> {
+): Handler<E, string> {
   return async (c, next) => {
     const contentType = c.req.header('content-type');
     if (contentType != null && contentType.startsWith(mediaType.replace(/;.*/, ''))) {
@@ -186,24 +177,6 @@ function skipWhenBodyAbsent<E extends Env>(
 
     return undefined;
   };
-}
-
-/** The property names a schema describes, used to match header names case-insensitively. */
-function propertyNamesOf(schema: StandardSchema): string[] {
-  try {
-    const converted = convertSchema(schema, {
-      components: new ComponentCollector(),
-      hoistRoot: false,
-      io: 'input',
-      target: 'draft-2020-12',
-    });
-    const properties = converted.properties;
-    if (typeof properties !== 'object' || properties == null) return [];
-
-    return Object.keys(properties);
-  } catch {
-    return [];
-  }
 }
 
 function normalizeMiddleware<E extends Env>(middleware: RouteConfig<E>['middleware']): MiddlewareHandler<E>[] {

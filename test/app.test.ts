@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict';
+
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
 import { Hono } from 'hono';
 import * as v from 'valibot';
@@ -8,7 +10,6 @@ import { standardSchema } from './helpers.ts';
 import { $, StandardOpenAPIHono } from '../src/app.ts';
 import { createRoute } from '../src/route.ts';
 import type { StandardSchema } from '../src/standard-schema.ts';
-import type { ValidationResult } from '../src/validator.ts';
 
 const JSON_TYPE = 'application/json';
 
@@ -21,11 +22,9 @@ async function readJson(response: Response): Promise<Record<string, unknown>> {
 
 function issueCount(body: Record<string, unknown>): number {
   const error = body.error;
-  if (typeof error !== 'object' || error == null || !('issues' in error) || !Array.isArray(error.issues)) {
-    throw new TypeError('Expected the response to contain validation issues.');
-  }
+  assert(Array.isArray(error), 'Expected the response to contain validation issues.');
 
-  return error.issues.length;
+  return error.length;
 }
 
 type SchemaLibrary = {
@@ -35,6 +34,7 @@ type SchemaLibrary = {
   createNameSchema(): StandardSchema;
   createStringSchema(): StandardSchema;
   createTokenHeaderSchema(): StandardSchema;
+  createUppercaseTokenHeaderSchema(): StandardSchema;
   createUUIDParamsSchema(): StandardSchema;
 };
 
@@ -46,6 +46,7 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createNameSchema: () => z.object({ name: z.string() }),
     createStringSchema: () => z.string(),
     createTokenHeaderSchema: () => z.object({ 'x-token': z.string() }),
+    createUppercaseTokenHeaderSchema: () => z.object({ 'X-Token': z.string() }),
     createUUIDParamsSchema: () => z.object({ cardId: z.uuid() }),
   },
   {
@@ -55,6 +56,7 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createNameSchema: () => toStandardJsonSchema(v.object({ name: v.string() })),
     createStringSchema: () => toStandardJsonSchema(v.string()),
     createTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'x-token': v.string() })),
+    createUppercaseTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'X-Token': v.string() })),
     createUUIDParamsSchema: () => toStandardJsonSchema(v.object({ cardId: v.pipe(v.string(), v.uuid()) })),
   },
 ];
@@ -210,12 +212,12 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('hands failures to the hook the route was registered with', async () => {
     const app = new StandardOpenAPIHono();
-    const seen: ValidationResult<unknown>[] = [];
+    const seen: { success: boolean; target: string }[] = [];
     app.openapi(
       cardRoute,
       c => c.json({ id: 'x' }),
       (result, c) => {
-        seen.push(result);
+        seen.push({ success: result.success, target: result.target });
 
         return result.success ? undefined : c.json({ from: 'hook' }, 422);
       },
@@ -240,6 +242,21 @@ describe.each(schemaLibraries)('$name validation', library => {
 
     expect(response.status).toBe(202);
     await expect(response.json()).resolves.toEqual({ id: 'hook' });
+  });
+
+  it('awaits an async hook before continuing validation', async () => {
+    const app = new StandardOpenAPIHono();
+    app.openapi(
+      cardRoute,
+      c => c.json({ id: 'handler' }),
+      async result =>
+        result.success ? new Response(JSON.stringify({ id: 'async-hook' }), { status: 202 }) : undefined,
+    );
+
+    const response = await app.request('/cards/550e8400-e29b-41d4-a716-446655440000');
+
+    expect(response.status).toBe(202);
+    await expect(response.json()).resolves.toEqual({ id: 'async-hook' });
   });
 
   it('falls back to the hook of the app it is mounted under', async () => {
@@ -291,7 +308,7 @@ describe.each(schemaLibraries)('$name validation', library => {
     expect(first.getDefaultHook()).toBeUndefined();
   });
 
-  it('matches header names however the caller cased them', async () => {
+  it('validates headers declared with lowercase schema keys', async () => {
     const app = new StandardOpenAPIHono();
     const route = createRoute({
       method: 'get',
@@ -304,6 +321,19 @@ describe.each(schemaLibraries)('$name validation', library => {
     const response = await app.request('/whoami', { headers: { 'X-Token': 'shouted' } });
 
     await expect(response.json()).resolves.toEqual({ token: 'shouted' });
+  });
+
+  it('does not recase header names for schema properties', async () => {
+    const app = new StandardOpenAPIHono();
+    const route = createRoute({
+      method: 'get',
+      path: '/uppercase-header',
+      request: { headers: library.createUppercaseTokenHeaderSchema() },
+      responses: { 200: { description: 'ok' } },
+    });
+    app.openapi(route, c => c.text('ok'));
+
+    expect((await app.request('/uppercase-header', { headers: { 'x-token': 'value' } })).status).toBe(400);
   });
 
   it('lets a request through when an optional body is absent', async () => {
