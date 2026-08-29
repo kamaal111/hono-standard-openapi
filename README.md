@@ -111,8 +111,10 @@ The generated document puts it at
 
 ## Handle validation errors
 
-Requests that fail validation return `400` by default. Set `defaultHook` on the app to return your
-own error shape consistently across routes:
+Requests use [`@hono/standard-validator`](https://www.npmjs.com/package/@hono/standard-validator).
+Failures return its standard `400` JSON body with `success: false`, the raw `data`, and an `error`
+array. Header schema property names must be lowercase because Hono normalizes request headers. Set
+`defaultHook` on the app to return your own error shape consistently across routes:
 
 ```ts
 const app = new StandardOpenAPIHono({
@@ -122,6 +124,9 @@ const app = new StandardOpenAPIHono({
 ```
 
 Document that `400` response in each route when it is part of your API contract.
+
+The package re-exports `sValidator`, `Hook`, and `flattenErrors` from
+`@hono/standard-validator` when you need the same validation behavior outside a documented route.
 
 ## Read the OpenAPI document
 
