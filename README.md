@@ -125,9 +125,6 @@ const app = new StandardOpenAPIHono({
 
 Document that `400` response in each route when it is part of your API contract.
 
-The package re-exports `sValidator`, `Hook`, and `flattenErrors` from
-`@hono/standard-validator` when you need the same validation behavior outside a documented route.
-
 ## Read the OpenAPI document
 
 Add `app.doc()` after registering routes. It serves the generated OpenAPI 3.1 JSON at the path you
