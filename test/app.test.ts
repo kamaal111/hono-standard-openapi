@@ -8,6 +8,7 @@ import { z } from 'zod';
 
 import { standardSchema } from './helpers.ts';
 import { $, StandardOpenAPIHono } from '../src/app.ts';
+import type { JsonObject } from '../src/json-value.ts';
 import { createRoute } from '../src/route.ts';
 import type { StandardSchema } from '../src/standard-schema.ts';
 
@@ -16,11 +17,11 @@ const JSON_TYPE = 'application/json';
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
 
 /** Reads a response body as a JSON object. */
-async function readJson(response: Response): Promise<Record<string, unknown>> {
+async function readJson(response: Response): Promise<JsonObject> {
   return JSON.parse(await response.text());
 }
 
-function issueCount(body: Record<string, unknown>): number {
+function issueCount(body: JsonObject): number {
   const error = body.error;
   assert(Array.isArray(error), 'Expected the response to contain validation issues.');
 

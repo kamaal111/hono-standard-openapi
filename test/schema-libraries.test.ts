@@ -1,9 +1,11 @@
+import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { OpenAPIGenerator } from '../src/generator.ts';
+import type { JsonObject } from '../src/json-value.ts';
 import { OpenAPIRegistry } from '../src/registry.ts';
 import type { StandardSchema } from '../src/standard-schema.ts';
 import type { RouteConfigBase, SchemaOrReference } from '../src/types.ts';
@@ -25,18 +27,18 @@ type SchemaLibrary = {
 };
 
 type SchemaFixture = {
-  readonly libraryOptions?: Record<string, unknown>;
+  readonly libraryOptions?: StandardJSONSchemaV1.Options['libraryOptions'];
   readonly schema: StandardSchema;
 };
 
 type ExampleSchemaFixture = SchemaFixture & {
-  readonly expectedNameSchema: Record<string, unknown>;
+  readonly expectedNameSchema: JsonObject;
 };
 
 type ResponseSchemas = {
   readonly card: StandardSchema;
   readonly error: StandardSchema;
-  readonly libraryOptions?: Record<string, unknown>;
+  readonly libraryOptions?: StandardJSONSchemaV1.Options['libraryOptions'];
 };
 
 const EXPECTED_NESTED_PRICE = { $ref: '#/components/schemas/Price' };

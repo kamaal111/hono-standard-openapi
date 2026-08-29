@@ -1,5 +1,14 @@
+import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
+
 import { ComponentNameConflictError, UnsupportedSchemaError } from './errors.ts';
-import { type JSONSchema, type SchemaIO, type StandardSchema, isStandardJSONSchema } from './standard-schema.ts';
+import { isJsonString, isObjectLike } from './json-value.ts';
+import {
+  type JSONSchema,
+  type SchemaIO,
+  type SchemaValue,
+  type StandardSchema,
+  isStandardJSONSchema,
+} from './standard-schema.ts';
 
 /** The JSON Schema dialect asked of the schema library. */
 export type JSONSchemaTarget = 'draft-2020-12' | 'draft-07' | 'openapi-3.0';
@@ -96,10 +105,12 @@ export class ComponentCollector {
   /** Reserved-but-not-yet-generated names hold `undefined`, which keeps their place in the order. */
   readonly #schemas = new Map<string, JSONSchema | undefined>();
 
-  get schemas(): Record<string, JSONSchema> {
+  get schemas() {
     const generated: Record<string, JSONSchema> = {};
     for (const [name, schema] of this.#schemas) {
-      if (schema != null) generated[name] = schema;
+      if (schema != null) {
+        generated[name] = schema;
+      }
     }
 
     return generated;
@@ -111,13 +122,17 @@ export class ComponentCollector {
 
   /** Holds a place for a schema that is about to be generated, keeping the document's order stable. */
   reserve(name: string): void {
-    if (!this.#schemas.has(name)) this.#schemas.set(name, undefined);
+    if (!this.#schemas.has(name)) {
+      this.#schemas.set(name, undefined);
+    }
   }
 
   register(name: string, schema: JSONSchema): void {
     const existing = this.#schemas.get(name);
     if (existing != null) {
-      if (!deepEquals(existing, schema)) throw new ComponentNameConflictError(name);
+      if (!deepEquals(existing, schema)) {
+        throw new ComponentNameConflictError(name);
+      }
 
       return;
     }
@@ -131,7 +146,7 @@ export interface ConvertOptions {
   readonly target: JSONSchemaTarget;
   readonly components: ComponentCollector;
   /** Vendor-specific conversion options defined by Standard JSON Schema. */
-  readonly libraryOptions?: Record<string, unknown> | undefined;
+  readonly libraryOptions?: StandardJSONSchemaV1.Options['libraryOptions'];
   readonly normalization?: NormalizationOptions | undefined;
   /** Name for the schema itself, for schemas that don't name themselves through `$id`. */
   readonly name?: string | undefined;
@@ -150,7 +165,7 @@ export interface ConvertOptions {
  *
  * The returned value is a `$ref` when the schema names itself, and the schema body when it doesn't.
  */
-export function convertSchema(schema: unknown, options: ConvertOptions): JSONSchema {
+export function convertSchema<T>(schema: T, options: ConvertOptions): JSONSchema {
   if (!isStandardJSONSchema(schema)) {
     throw new UnsupportedSchemaError(isStandardSchemaLike(schema) ? schema['~standard'].vendor : undefined);
   }
@@ -170,7 +185,9 @@ export function convertSchema(schema: unknown, options: ConvertOptions): JSONSch
   reserve(named, context);
   registerDefinitions(definitions, context);
 
-  if (options.hoistRoot === false) return prepare(stripIdentity(root), context);
+  if (options.hoistRoot === false) {
+    return prepare(stripIdentity(root), context);
+  }
 
   return walk(named, context);
 }
@@ -179,10 +196,9 @@ function describe(
   schema: StandardSchema,
   io: SchemaIO,
   target: JSONSchemaTarget,
-  libraryOptions: Record<string, unknown> | undefined,
+  libraryOptions: StandardJSONSchemaV1.Options['libraryOptions'],
 ): JSONSchema {
-  const converted = schema['~standard'].jsonSchema[io]({ libraryOptions, target });
-  const { $schema: _dialect, ...rest } = converted;
+  const { $schema: _dialect, ...rest } = schema['~standard'].jsonSchema[io]({ libraryOptions, target });
 
   return rest;
 }
@@ -194,17 +210,21 @@ interface WalkContext {
   readonly pointers: Map<string, string>;
 }
 
-function splitDefinitions(raw: JSONSchema): { definitions: Record<string, JSONSchema>; root: JSONSchema } {
+function splitDefinitions(raw: JSONSchema) {
   const root: JSONSchema = { ...raw };
   const definitions: Record<string, JSONSchema> = {};
 
   for (const keyword of DEFINITIONS_KEYWORDS) {
     const block = root[keyword];
-    if (!isRecord(block)) continue;
+    if (!isObjectLike(block)) {
+      continue;
+    }
 
     delete root[keyword];
     for (const [key, value] of Object.entries(block)) {
-      if (isRecord(value)) definitions[key] = value;
+      if (isObjectLike(value)) {
+        definitions[key] = value;
+      }
     }
   }
 
@@ -221,7 +241,7 @@ function registerDefinitions(definitions: Record<string, JSONSchema>, context: W
   const named = Object.entries(definitions).map(([key, definition]) => ({
     definition,
     key,
-    name: typeof definition.$id === 'string' ? definition.$id : key,
+    name: isJsonString(definition.$id) ? definition.$id : key,
   }));
 
   for (const { key, name } of named) {
@@ -237,14 +257,18 @@ function registerDefinitions(definitions: Record<string, JSONSchema>, context: W
 
 /** Claims a component slot for a self-naming schema, to be filled once the schema is walked. */
 function reserve(node: JSONSchema, context: WalkContext): void {
-  if (typeof node.$id === 'string') context.components.reserve(node.$id);
+  if (isJsonString(node.$id)) {
+    context.components.reserve(node.$id);
+  }
 }
 
 /** Walks a node, hoisting it into components when it names itself. */
 function walk(node: JSONSchema, context: WalkContext): JSONSchema {
   const prepared = prepare(node, context);
   const name = prepared.$id;
-  if (typeof name !== 'string') return prepared;
+  if (!isJsonString(name)) {
+    return prepared;
+  }
 
   context.components.register(name, stripIdentity(prepared));
 
@@ -254,7 +278,7 @@ function walk(node: JSONSchema, context: WalkContext): JSONSchema {
 /** Rewrites references, descends into subschemas, then normalizes — but leaves `$id` in place. */
 function prepare(node: JSONSchema, context: WalkContext): JSONSchema {
   const reference = node.$ref;
-  if (typeof reference === 'string') {
+  if (isJsonString(reference)) {
     return { ...node, $ref: context.pointers.get(reference) ?? reference };
   }
 
@@ -266,9 +290,13 @@ function prepare(node: JSONSchema, context: WalkContext): JSONSchema {
   return normalize(walked, context.normalization);
 }
 
-function walkChild(value: unknown, context: WalkContext): unknown {
-  if (Array.isArray(value)) return value.map(entry => walkChild(entry, context));
-  if (!isRecord(value)) return value;
+function walkChild(value: SchemaValue, context: WalkContext): SchemaValue {
+  if (Array.isArray(value)) {
+    return value.map(entry => walkChild(entry, context));
+  }
+  if (!isObjectLike(value)) {
+    return value;
+  }
 
   return walk(value, context);
 }
@@ -284,8 +312,12 @@ function normalize(schema: JSONSchema, options: Required<NormalizationOptions>):
   const normalized: JSONSchema = {};
 
   for (const [key, value] of Object.entries(collapsed)) {
-    if (options.dropStrictAdditionalProperties && key === 'additionalProperties' && value === false) continue;
-    if (options.dropFormatImpliedPatterns && key === 'pattern' && typeof collapsed.format === 'string') continue;
+    if (options.dropStrictAdditionalProperties && key === 'additionalProperties' && value === false) {
+      continue;
+    }
+    if (options.dropFormatImpliedPatterns && key === 'pattern' && isJsonString(collapsed.format)) {
+      continue;
+    }
 
     if (options.constToEnum && key === 'const') {
       normalized.enum = [value];
@@ -317,14 +349,22 @@ function orderKeywords(schema: JSONSchema): JSONSchema {
  */
 function collapseNullableUnion(schema: JSONSchema): JSONSchema {
   const branches = schema.anyOf;
-  if (!Array.isArray(branches) || branches.length !== 2) return schema;
+  if (!Array.isArray(branches) || branches.length !== 2) {
+    return schema;
+  }
 
-  const nullBranchIndex = branches.findIndex(branch => isRecord(branch) && branch.type === 'null');
-  if (nullBranchIndex === -1) return schema;
+  const nullBranchIndex = branches.findIndex(branch => isObjectLike(branch) && branch.type === 'null');
+  if (nullBranchIndex === -1) {
+    return schema;
+  }
 
   const valueBranch = branches[nullBranchIndex === 0 ? 1 : 0];
-  if (!isRecord(valueBranch) || typeof valueBranch.type !== 'string') return schema;
-  if (Object.keys(valueBranch).some(key => key === '$ref' || key === '$id')) return schema;
+  if (!isObjectLike(valueBranch) || !isJsonString(valueBranch.type)) {
+    return schema;
+  }
+  if (Object.keys(valueBranch).some(key => key === '$ref' || key === '$id')) {
+    return schema;
+  }
 
   const { type, ...valueRest } = valueBranch;
   const { anyOf: _branches, ...rest } = schema;
@@ -332,14 +372,10 @@ function collapseNullableUnion(schema: JSONSchema): JSONSchema {
   return { type: [null, type], ...valueRest, ...rest };
 }
 
-function isStandardSchemaLike(value: unknown): value is { '~standard': { vendor: string } } {
-  return isRecord(value) && isRecord(value['~standard']) && typeof value['~standard'].vendor === 'string';
+function isStandardSchemaLike<T>(value: T): value is T & { '~standard': { vendor: string } } {
+  return isObjectLike(value) && isObjectLike(value['~standard']) && isJsonString(value['~standard'].vendor);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value != null && !Array.isArray(value);
-}
-
-function deepEquals(left: unknown, right: unknown): boolean {
+function deepEquals(left: SchemaValue, right: SchemaValue): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }

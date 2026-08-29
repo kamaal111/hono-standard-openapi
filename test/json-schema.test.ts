@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { standardSchema } from './helpers.ts';
 import { UnsupportedSchemaError } from '../src/errors.ts';
 import { ComponentCollector, convertSchema } from '../src/json-schema.ts';
+import type { JsonObject } from '../src/json-value.ts';
 
-function convert(output: Record<string, unknown>, normalization = {}) {
+function convert(output: JsonObject, normalization = {}) {
   return convertSchema(standardSchema({ output }), {
     components: new ComponentCollector(),
     io: 'output',
@@ -114,7 +115,7 @@ describe('schema conversion edge cases', () => {
   });
 
   it('leaves unions that cannot be safely collapsed intact', () => {
-    const cases = [
+    const cases: JsonObject[] = [
       { anyOf: [{ type: 'string' }] },
       { anyOf: [{ type: 'string' }, { type: 'number' }] },
       { anyOf: [{ type: 'null' }, false] },
