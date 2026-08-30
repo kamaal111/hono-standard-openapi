@@ -1,6 +1,8 @@
+import { GraphQLStandardSchemaGenerator } from '@apollo/graphql-standard-schema';
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
 import { type as arkType } from 'arktype';
+import { parse } from 'graphql';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -333,5 +335,24 @@ describe.each(schemaLibraries)('$name', library => {
       required: ['code', 'message'],
       type: 'object',
     });
+  });
+});
+
+describe('GraphQL Standard Schema matrix', () => {
+  it('converts a generated fragment and explicitly named component', () => {
+    const generator = new GraphQLStandardSchemaGenerator({
+      schema: parse('type Query { card: Card } type Card { id: ID! name: String! }'),
+    });
+    const Card = generator.getFragmentSchema(parse('fragment CardDetails on Card { id name }')).serialize;
+    const registry = new OpenAPIRegistry();
+    registry.register('Card', Card);
+    registry.registerPath(jsonResponseRoute(Card));
+
+    const document: Document = new OpenAPIGenerator(registry).generateDocument(DOC_CONFIG);
+
+    expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
+      $ref: '#/components/schemas/Card',
+    });
+    expect(document.components?.schemas?.Card.properties.name).toEqual({ title: 'Card.name: String!', type: 'string' });
   });
 });

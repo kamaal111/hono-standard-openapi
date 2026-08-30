@@ -1,0 +1,27 @@
+{
+  "$defs": {},
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "card": {
+      "properties": {
+        "__typename": {
+          "const": "Card"
+        },
+        "id": {
+          "title": "Card.id: ID!",
+          "type": "string"
+        },
+        "name": {
+          "title": "Card.name: String!",
+          "type": "string"
+        }
+      },
+      "required": ["__typename", "id", "name"],
+      "title": "Card",
+      "type": "object"
+    }
+  },
+  "required": ["card"],
+  "title": "query GetCard",
+  "type": "object"
+}

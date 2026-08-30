@@ -46,6 +46,7 @@
     "openapi3-ts": "^4.5.0"
   },
   "devDependencies": {
+    "@apollo/graphql-standard-schema": "^0.2.0",
     "@kamaal111/oxlint-plugin-anti-slop": "^0.0.3",
     "@oxlint/plugins": "^1.80.0",
     "@standard-schema/spec": "^1.1.0",
@@ -54,6 +55,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "arktype": "^2.2.3",
     "eslint-plugin-import": "^2.32.0",
+    "graphql": "^16.11.0",
     "hono": "^4.13.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",

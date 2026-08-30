@@ -1,0 +1,4 @@
+packageExtensions:
+  '@apollo/graphql-standard-schema@0.2.0':
+    dependencies:
+      '@wry/equality': ^0.5.7

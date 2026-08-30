@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 
+import { GraphQLStandardSchemaGenerator } from '@apollo/graphql-standard-schema';
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
 import { type as arkType } from 'arktype';
+import { parse } from 'graphql';
 import { Hono } from 'hono';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
@@ -331,34 +333,6 @@ describe.each(schemaLibraries)('$name validation', library => {
     expect(first.getDefaultHook()).toBeUndefined();
   });
 
-  it('validates headers declared with lowercase schema keys', async () => {
-    const app = new StandardOpenAPIHono();
-    const route = createRoute({
-      method: 'get',
-      path: '/whoami',
-      request: { headers: library.createTokenHeaderSchema() },
-      responses: { 200: { description: 'ok' } },
-    });
-    app.openapi(route, c => c.json({ token: c.req.header('x-token') }));
-
-    const response = await app.request('/whoami', { headers: { 'X-Token': 'shouted' } });
-
-    await expect(response.json()).resolves.toEqual({ token: 'shouted' });
-  });
-
-  it('does not recase header names for schema properties', async () => {
-    const app = new StandardOpenAPIHono();
-    const route = createRoute({
-      method: 'get',
-      path: '/uppercase-header',
-      request: { headers: library.createUppercaseTokenHeaderSchema() },
-      responses: { 200: { description: 'ok' } },
-    });
-    app.openapi(route, c => c.text('ok'));
-
-    expect((await app.request('/uppercase-header', { headers: { 'x-token': 'value' } })).status).toBe(400);
-  });
-
   it('lets a request through when an optional body is absent', async () => {
     const app = new StandardOpenAPIHono();
     const route = createRoute({
@@ -517,5 +491,62 @@ describe.each(schemaLibraries)('$name validation', library => {
     const response = await app.request('/extra-header', { headers: { 'x-extra': 'value' } });
 
     await expect(response.json()).resolves.toMatchObject({ 'x-extra': 'value' });
+  });
+});
+
+describe.each(schemaLibraries)('$name header validation', library => {
+  it('validates headers declared with lowercase schema keys', async () => {
+    const app = new StandardOpenAPIHono();
+    const route = createRoute({
+      method: 'get',
+      path: '/whoami',
+      request: { headers: library.createTokenHeaderSchema() },
+      responses: { 200: { description: 'ok' } },
+    });
+    app.openapi(route, c => c.json({ token: c.req.header('x-token') }));
+
+    const response = await app.request('/whoami', { headers: { 'X-Token': 'shouted' } });
+
+    await expect(response.json()).resolves.toEqual({ token: 'shouted' });
+  });
+
+  it('does not recase header names for schema properties', async () => {
+    const app = new StandardOpenAPIHono();
+    const route = createRoute({
+      method: 'get',
+      path: '/uppercase-header',
+      request: { headers: library.createUppercaseTokenHeaderSchema() },
+      responses: { 200: { description: 'ok' } },
+    });
+    app.openapi(route, c => c.text('ok'));
+
+    expect((await app.request('/uppercase-header', { headers: { 'x-token': 'value' } })).status).toBe(400);
+  });
+});
+
+describe('GraphQL Standard Schema matrix', () => {
+  it('validates GraphQL variables through Hono', async () => {
+    const generator = new GraphQLStandardSchemaGenerator({
+      schema: parse('type Query { echo(name: String!): String! }'),
+    });
+    const schema = generator.getVariablesSchema(parse('query Echo($name: String!) { echo(name: $name) }'));
+    const app = new StandardOpenAPIHono();
+    app.openapi(
+      createRoute({
+        method: 'post',
+        path: '/things',
+        request: { body: { content: { [JSON_TYPE]: { schema } }, required: true } },
+        responses: { 200: { description: 'ok' } },
+      }),
+      c => c.json({ name: c.req.valid('json').name }),
+    );
+
+    const response = await app.request('/things', {
+      body: JSON.stringify({ name: 'Luffy' }),
+      headers: { 'content-type': JSON_TYPE },
+      method: 'post',
+    });
+
+    await expect(response.json()).resolves.toEqual({ name: 'Luffy' });
   });
 });

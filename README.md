@@ -15,6 +15,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 - [Using ArkType](./docs/arktype.md)
 - [Using Zod](./docs/zod.md)
 - [Using Valibot](./docs/valibot.md)
+- [Using GraphQL Standard Schema](./docs/graphql-standard-schema.md)
 
 ## Installation
 
@@ -157,3 +158,4 @@ that needs the document directly, call `app.getOpenAPIDocument(config)` with the
 - [Use ArkType](./docs/arktype.md): native JSON Schema, components, multiple responses, and errors.
 - [Use Zod](./docs/zod.md): components, multiple responses, and validation errors.
 - [Use Valibot](./docs/valibot.md): converter setup, components, multiple responses, and errors.
+- [Use GraphQL Standard Schema](./docs/graphql-standard-schema.md): generated fragments and variables schemas.
