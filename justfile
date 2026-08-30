@@ -19,12 +19,10 @@ pnpm-version:
     @jq -r '.devEngines.packageManager.version' package.json
 
 # Run all sanity checks
-[parallel]
-ready: quality test-cov
+ready: prepare ready-tasks
 
 # Run quality checks
-[parallel]
-quality: format-check lint type-check
+quality: prepare quality-tasks
 
 # Test package
 test:
@@ -33,10 +31,6 @@ test:
 # Test package with watch
 test-watch:
     {{ PNR }} test:watch
-
-# Test package with coverage
-test-cov:
-    {{ PNR }} test:cov
 
 # Compile package
 compile:
@@ -76,3 +70,11 @@ zed:
 # Open project in vscode
 code:
     code .
+
+[private]
+[parallel]
+ready-tasks: quality-tasks test
+
+[private]
+[parallel]
+quality-tasks: format-check lint type-check

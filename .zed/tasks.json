@@ -1,0 +1,44 @@
+[
+  {
+    "label": "just: quality",
+    "command": "just",
+    "args": ["quality"],
+    "show_command": false
+  },
+  {
+    "label": "just: ready",
+    "command": "just",
+    "args": ["ready"],
+    "show_command": false
+  },
+  {
+    "label": "pnpm: format",
+    "command": "pnpm",
+    "args": ["format"],
+    "show_command": false
+  },
+  {
+    "label": "pnpm: format:check",
+    "command": "pnpm",
+    "args": ["format:check"],
+    "show_command": false
+  },
+  {
+    "label": "pnpm: lint",
+    "command": "pnpm",
+    "args": ["lint"],
+    "show_command": false
+  },
+  {
+    "label": "pnpm: type-check",
+    "command": "pnpm",
+    "args": ["type-check"],
+    "show_command": false
+  },
+  {
+    "label": "pnpm: test",
+    "command": "pnpm",
+    "args": ["test"],
+    "show_command": false
+  }
+]
