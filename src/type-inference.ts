@@ -76,18 +76,20 @@ type StatusFrom<Key> = Key extends StatusCode
       : never
     : never;
 
-type ResponseBody<Response, MediaType> = MediaType extends keyof Response
-  ? Response[MediaType] extends { schema: infer Schema extends StandardSchemaV1 }
+type ResponseBody<ResponseEntry, MediaType> = MediaType extends keyof ResponseEntry
+  ? ResponseEntry[MediaType] extends { schema: infer Schema extends StandardSchemaV1 }
     ? StandardSchemaV1.InferOutput<Schema>
     : never
   : never;
 
-type TypedResponseFor<Response, Status extends StatusCode> = Response extends { content: infer Content }
-  ? ResponseBody<Content, JsonMediaType<Content>> extends infer Body
-    ? [Body] extends [never]
-      ? TypedResponse<unknown, Status, 'text'>
-      : TypedResponse<Body, Status, 'json'>
-    : never
+type TypedResponseFor<ResponseEntry, Status extends StatusCode> = ResponseEntry extends { content: infer Content }
+  ? JsonMediaType<Content> extends never
+    ? Response & TypedResponse<unknown, Status, 'text'>
+    : [ResponseBody<Content, JsonMediaType<Content>>] extends [infer Body]
+      ? [Body] extends [never]
+        ? Response & TypedResponse<unknown, Status, 'json'>
+        : Response & TypedResponse<Body, Status, 'json'>
+      : never
   : never;
 
 /** The responses a handler is allowed to return, one per documented status code. */
@@ -95,19 +97,16 @@ export type RouteConfigToTypedResponse<R extends RouteConfigBase> = {
   [Key in keyof R['responses']]: TypedResponseFor<R['responses'][Key], StatusFrom<Key>>;
 }[keyof R['responses']];
 
-type HasContentlessResponse<R extends RouteConfigBase> = {
-  [Key in keyof R['responses']]: R['responses'][Key] extends { content: unknown } ? never : true;
-}[keyof R['responses']];
-
 /**
- * What a handler may return.
- *
- * A route that documents a response without a body — a 204, say — can also answer with a plain
- * `Response`, since there is no schema to satisfy.
+ * What a handler may return: either the response typed against the route's own documented schemas, or
+ * a plain `Response` it built itself. Hono accepts a raw `Response` from any handler regardless of a
+ * route's declared shape, so this type only ever adds precision — it never has to be the sole option.
  */
-export type RouteHandlerResponse<R extends RouteConfigBase> = [HasContentlessResponse<R>] extends [never]
-  ? RouteConfigToTypedResponse<R> | Promise<RouteConfigToTypedResponse<R>>
-  : RouteConfigToTypedResponse<R> | Promise<RouteConfigToTypedResponse<R>> | Response | Promise<Response>;
+export type RouteHandlerResponse<R extends RouteConfigBase> =
+  | RouteConfigToTypedResponse<R>
+  | Promise<RouteConfigToTypedResponse<R>>
+  | Response
+  | Promise<Response>;
 
 export type RouteHandler<R extends RouteConfigBase, E extends Env = Env> = Handler<
   E,
