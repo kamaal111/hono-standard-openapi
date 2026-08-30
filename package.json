@@ -37,9 +37,8 @@
     "lint": "oxlint",
     "prepare": "husky",
     "release": "sh scripts/publish.sh",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
