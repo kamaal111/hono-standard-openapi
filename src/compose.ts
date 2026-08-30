@@ -42,7 +42,7 @@ export function objectSchema(properties: Readonly<Record<string, SchemaOrReferen
   return { [COMPOSE]: { kind: COMPOSITE_KINDS.OBEJCT, properties } };
 }
 
-export function isComposedSchema(value: unknown): value is ComposedSchema {
+export function isComposedSchema<T>(value: T): value is T & ComposedSchema {
   return typeof value === 'object' && value !== null && COMPOSE in value;
 }
 
