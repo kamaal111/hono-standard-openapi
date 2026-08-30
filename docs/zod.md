@@ -6,6 +6,47 @@
 pnpm add hono zod @kamaalio/hono-standard-openapi
 ```
 
+## Zod Mini
+
+Zod Mini schemas need `z.toJSONSchema()` before they can be used in a route. The wrapper preserves
+validation and adds the Standard JSON Schema conversion that generates the OpenAPI document. Use
+Mini's `.check()` API to attach metadata and constraints.
+
+```ts
+import { createRoute } from '@kamaalio/hono-standard-openapi';
+import * as z from 'zod/mini';
+
+const Price = z.object({ amount: z.number() }).check(z.meta({ $id: 'Price' }));
+const Card = z
+  .object({
+    id: z.string(),
+    name: z.string().check(z.meta({ examples: ['Luffy'] })),
+    price: Price,
+  })
+  .check(z.meta({ $id: 'Card' }));
+const ErrorResponse = z.object({ code: z.string(), message: z.string() }).check(z.meta({ $id: 'ErrorResponse' }));
+
+const route = createRoute({
+  method: 'get',
+  path: '/cards/{cardId}',
+  request: {
+    params: z.toJSONSchema(
+      z.object({
+        cardId: z.string().check(z.minLength(3), z.meta({ examples: ['1212121'] })),
+      }),
+    ),
+  },
+  responses: {
+    200: { content: { 'application/json': { schema: z.toJSONSchema(Card) } }, description: 'A card' },
+    400: { content: { 'application/json': { schema: z.toJSONSchema(ErrorResponse) } }, description: 'Invalid request' },
+  },
+});
+```
+
+`$id` values work the same way as full Zod: `Card`, `Price`, and `ErrorResponse` become reusable
+OpenAPI components. Wrap each Mini schema passed to `request` or `responses`; the rest of this guide
+uses full Zod's instance API.
+
 ## Define schemas and a route
 
 Use Zod's normal `.meta()` API. Give every schema you want to share one `$id`. It works whether the
