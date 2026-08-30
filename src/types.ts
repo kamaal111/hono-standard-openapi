@@ -12,12 +12,13 @@ import type {
   SchemaObject,
 } from 'openapi3-ts/oas31';
 
+import type { ComposedSchema } from './compose.ts';
 import type { StandardSchema } from './standard-schema.ts';
 
 export type { ReferenceObject, SchemaObject };
 
-/** Either a schema to convert, or an already-written OpenAPI schema to pass through untouched. */
-export type SchemaOrReference = StandardSchemaV1 | SchemaObject | ReferenceObject;
+/** Either a schema to convert, an `allOf` of several, or an already-written OpenAPI schema. */
+export type SchemaOrReference = StandardSchemaV1 | SchemaObject | ReferenceObject | ComposedSchema;
 
 export interface MediaTypeObject {
   readonly schema?: SchemaOrReference | undefined;
