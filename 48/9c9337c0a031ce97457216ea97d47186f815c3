@@ -1,0 +1,63 @@
+package.json
+  s_4c2f9f8da66a40::t_9fb6cae6689bf6 50-51,61
+pnpm-lock.yaml
+  s_4c2f9f8da66a40::t_c9b3abd2a12018 217-222,251-252,366-368,524-525,530-531,536-537,542-543,548-549,554-555,560-561,566-567,573-574,580-581,587-588,594-595,601-602,608-609,615-616,622-623,628-629,634-635,640-641,646-653,1686-1687,2160-2163,2241,2244,2247,2250,2253,2256,2259,2262,2265,2268,2271,2274,2277,2280,2283,2286,2289,2292,2295,2298-2301,3365,3367-3385
+src/generator.ts
+  s_a66b7fddfc1cae::t_10c3742743b9e7 1-11,15,17-24,32,41,55-73,76,98,134,146,158,162-164,187,201-202,210,212-213,222,234,243,250-251,254-258,271-275,281,283-284,288,296,305,324,330,333,338-339
+src/standard-schema.ts
+  s_a66b7fddfc1cae::t_1618a55d8b7695 3-4,14-17,22,30,38,40
+vitest.config.ts
+  s_7dfdb441ce905d::t_5e343f12cb1d65 5
+.oxfmtrc.json
+  s_4c2f9f8da66a40::t_f62db39d955a12 3
+oxlint.config.ts
+  s_4c2f9f8da66a40::t_d3bf12f221afad 5-8,20-34,47
+src/app.ts
+  s_4c2f9f8da66a40::t_7c19c068b4d8ad 182-187,190
+src/json-schema.ts
+  s_4c2f9f8da66a40::t_4a054bfa78dfcf 2-9,106,141,160,189,192-194,206,233,249,256,266,278,297,335,344-345,348
+src/json-value.ts
+  s_4c2f9f8da66a40::t_66b60b1f301407 1-18
+src/registry.ts
+  s_4c2f9f8da66a40::t_603ec419f7d320 1,25,81
+src/types.ts
+  s_4c2f9f8da66a40::t_dce3edb7ade37e 3-4,25-26
+test/app.test.ts
+  s_4c2f9f8da66a40::t_5400c20795d9db 11,20,24
+test/json-schema.test.ts
+  s_4c2f9f8da66a40::t_bacd9c8455e984 6,8,118
+test/schema-libraries.test.ts
+  s_4c2f9f8da66a40::t_72d37b9e5fd942 7,9,29,34,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "489c9337c0a031ce97457216ea97d47186f815c3",
+  "prompts": {},
+  "sessions": {
+    "s_4c2f9f8da66a40": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed9ca876-f3d4-440f-89a4-3ef275cdd467",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    },
+    "s_7dfdb441ce905d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a04d14-7e36-72d0-a25a-e4cd01e3bc8a",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    },
+    "s_a66b7fddfc1cae": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05235-ab3c-7860-ba79-98f7603618f7",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
