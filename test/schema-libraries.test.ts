@@ -4,6 +4,7 @@ import { type as arkType } from 'arktype';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import * as zMini from 'zod/mini';
 
 import { OpenAPIGenerator } from '../src/generator.ts';
 import type { JsonObject } from '../src/json-value.ts';
@@ -117,6 +118,52 @@ const schemaLibraries: readonly SchemaLibrary[] = [
         card: z.object({ id: z.string(), price: Price }).meta({ $id: 'Card' }),
         error: z.object({ code: z.string(), message: z.string() }).meta({ $id: 'ErrorResponse' }),
       };
+    },
+    expectedSchemaId: 'Card',
+  },
+  {
+    name: 'Zod Mini',
+    createCard: () => ({
+      schema: zMini.toJSONSchema(
+        zMini.object({ id: zMini.string(), name: zMini.string() }).check(zMini.meta({ $id: 'Card' })),
+      ),
+    }),
+    createCardWithExample: () => ({
+      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
+      schema: zMini.toJSONSchema(
+        zMini
+          .object({
+            id: zMini.string(),
+            name: zMini.string().check(zMini.meta({ examples: ['Luffy'] })),
+          })
+          .check(zMini.meta({ $id: 'Card' })),
+      ),
+    }),
+    createCardWithPrice: () => {
+      const Price = zMini.object({ amount: zMini.number() }).check(zMini.meta({ $id: 'Price' }));
+
+      return {
+        schema: zMini.toJSONSchema(
+          zMini.object({ id: zMini.string(), price: Price }).check(zMini.meta({ $id: 'Card' })),
+        ),
+      };
+    },
+    createParamsWithExample: () => ({
+      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
+      schema: zMini.toJSONSchema(
+        zMini.object({
+          id: zMini.string().check(zMini.minLength(3), zMini.meta({ examples: ['1212121'] })),
+        }),
+      ),
+    }),
+    createResponseSchemas: () => {
+      const Price = zMini.object({ amount: zMini.number() }).check(zMini.meta({ $id: 'Price' }));
+      const Card = zMini.object({ id: zMini.string(), price: Price }).check(zMini.meta({ $id: 'Card' }));
+      const ErrorResponse = zMini
+        .object({ code: zMini.string(), message: zMini.string() })
+        .check(zMini.meta({ $id: 'ErrorResponse' }));
+
+      return { card: zMini.toJSONSchema(Card), error: zMini.toJSONSchema(ErrorResponse) };
     },
     expectedSchemaId: 'Card',
   },

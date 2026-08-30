@@ -6,6 +6,7 @@ import { Hono } from 'hono';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import * as zMini from 'zod/mini';
 
 import { standardSchema } from './helpers.ts';
 import { $, StandardOpenAPIHono } from '../src/app.ts';
@@ -60,6 +61,16 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createTokenHeaderSchema: () => z.object({ 'x-token': z.string() }),
     createUppercaseTokenHeaderSchema: () => z.object({ 'X-Token': z.string() }),
     createUUIDParamsSchema: () => z.object({ cardId: z.uuid() }),
+  },
+  {
+    name: 'Zod Mini',
+    createCardResponse: () => zMini.toJSONSchema(zMini.object({ id: zMini.string() })),
+    createCookieSchema: () => zMini.toJSONSchema(zMini.object({ session: zMini.string() })),
+    createNameSchema: () => zMini.toJSONSchema(zMini.object({ name: zMini.string() })),
+    createStringSchema: () => zMini.toJSONSchema(zMini.string()),
+    createTokenHeaderSchema: () => zMini.toJSONSchema(zMini.object({ 'x-token': zMini.string() })),
+    createUppercaseTokenHeaderSchema: () => zMini.toJSONSchema(zMini.object({ 'X-Token': zMini.string() })),
+    createUUIDParamsSchema: () => zMini.toJSONSchema(zMini.object({ cardId: zMini.uuid() })),
   },
   {
     name: 'Valibot',
