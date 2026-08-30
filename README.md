@@ -11,6 +11,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 - [Add response examples](#add-response-examples)
 - [Handle validation errors](#handle-validation-errors)
 - [Read the OpenAPI document](#read-the-openapi-document)
+- [Using ArkType](./docs/arktype.md)
 - [Using Zod](./docs/zod.md)
 - [Using Valibot](./docs/valibot.md)
 
@@ -60,7 +61,7 @@ app.openapi(getCard, c => {
 
 Use `$id` once to make a schema a reusable OpenAPI component. The generated response then refers
 to `#/components/schemas/Card`. See the guides for nested components, multiple responses, errors,
-and the Valibot converter setup.
+ArkType metadata, and the Valibot converter setup.
 
 ## Add middleware to a route
 
@@ -90,7 +91,7 @@ const getCard = createRoute({
 ## Add response examples
 
 Put an OpenAPI `example` next to a response media type. This is independent of the schema library,
-so it works with Zod, Valibot, and every other supported Standard Schema library:
+so it works with ArkType, Zod, Valibot, and every other supported Standard Schema library:
 
 ```ts
 responses: {
@@ -150,5 +151,6 @@ that needs the document directly, call `app.getOpenAPIDocument(config)` with the
 
 ## Guides
 
+- [Use ArkType](./docs/arktype.md): native JSON Schema, components, multiple responses, and errors.
 - [Use Zod](./docs/zod.md): components, multiple responses, and validation errors.
 - [Use Valibot](./docs/valibot.md): converter setup, components, multiple responses, and errors.
