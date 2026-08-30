@@ -2,6 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { describe, expect, it } from 'vitest';
 
 import { standardSchema } from './helpers.ts';
+import { allOf, objectSchema } from '../src/compose.ts';
 import { ComponentNameConflictError, UnsupportedSchemaError } from '../src/errors.ts';
 import { OpenAPIGenerator } from '../src/generator.ts';
 import { OpenAPIRegistry } from '../src/registry.ts';
@@ -149,6 +150,81 @@ describe('component naming', () => {
     };
 
     expect(() => documentFor(jsonResponseRoute(opaque))).toThrow(UnsupportedSchemaError);
+  });
+});
+
+describe('allOf composition', () => {
+  it('expands each member independently, hoisting the ones that name themselves', () => {
+    const Base = standardSchema({
+      output: {
+        $id: 'Base',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+        type: 'object',
+      },
+    });
+    const Extra = standardSchema({
+      output: { properties: { nickname: { type: 'string' } }, type: 'object' },
+    });
+
+    const document = documentFor(jsonResponseRoute(allOf([Base, Extra])));
+
+    expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
+      allOf: [{ $ref: '#/components/schemas/Base' }, { properties: { nickname: { type: 'string' } }, type: 'object' }],
+    });
+    expect(document.components?.schemas?.Base).toEqual({
+      properties: { id: { type: 'string' } },
+      required: ['id'],
+      type: 'object',
+    });
+  });
+
+  it('composes members from different schema libraries and an already-written fragment', () => {
+    const FromLibraryOne = standardSchema({ output: { $id: 'One', type: 'object', properties: {} } });
+    const FromLibraryTwo = standardSchema({ output: { $id: 'Two', type: 'object', properties: {} } });
+
+    const document = documentFor(
+      jsonResponseRoute(allOf([FromLibraryOne, FromLibraryTwo, { type: 'string', description: 'a raw fragment' }])),
+    );
+
+    expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
+      allOf: [
+        { $ref: '#/components/schemas/One' },
+        { $ref: '#/components/schemas/Two' },
+        { type: 'string', description: 'a raw fragment' },
+      ],
+    });
+  });
+
+  it('folds a foreign schema under a property key, then composes that with a base response', () => {
+    const Base = standardSchema({
+      output: {
+        $id: 'SessionResponse',
+        properties: {
+          user: { properties: { id: { type: 'string' } }, required: ['id'], type: 'object' },
+        },
+        required: ['user'],
+        type: 'object',
+      },
+    });
+    const Extras = standardSchema({
+      output: { properties: { nickname: { type: 'string' } }, required: ['nickname'], type: 'object' },
+    });
+
+    const document = documentFor(jsonResponseRoute(allOf([Base, objectSchema({ user: Extras })])));
+
+    expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
+      allOf: [
+        { $ref: '#/components/schemas/SessionResponse' },
+        {
+          properties: {
+            user: { properties: { nickname: { type: 'string' } }, required: ['nickname'], type: 'object' },
+          },
+          required: ['user'],
+          type: 'object',
+        },
+      ],
+    });
   });
 });
 

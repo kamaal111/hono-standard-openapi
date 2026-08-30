@@ -11,6 +11,7 @@ import type {
   SchemaObject,
 } from 'openapi3-ts/oas31';
 
+import { compositeOf, isComposedSchema } from './compose.ts';
 import { UnsupportedParameterSchemaError, UnsupportedSchemaError } from './errors.ts';
 import { ComponentCollector, type JSONSchemaTarget, type NormalizationOptions, convertSchema } from './json-schema.ts';
 import { type JsonObject, type JsonValue, isJsonString, isObjectLike } from './json-value.ts';
@@ -273,8 +274,20 @@ export class OpenAPIGenerator {
     return generated;
   }
 
-  /** Converts a schema, or passes an already-written OpenAPI schema through untouched. */
+  /** Converts a schema, expands a composite member by member, or passes raw OpenAPI through. */
   #describe(schema: SchemaOrReference, io: SchemaIO): OasSchema {
+    if (isComposedSchema(schema)) {
+      const composite = compositeOf(schema);
+      if (composite.kind === 'allOf') {
+        return { allOf: composite.schemas.map(member => this.#describe(member, io)) };
+      }
+
+      const properties = Object.fromEntries(
+        Object.entries(composite.properties).map(([key, member]) => [key, this.#describe(member, io)]),
+      );
+
+      return { properties, required: Object.keys(composite.properties), type: 'object' };
+    }
     if (isStandardJSONSchema(schema)) {
       return this.#convert(schema, io);
     }

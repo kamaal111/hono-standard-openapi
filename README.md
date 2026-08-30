@@ -11,6 +11,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 - [Add response examples](#add-response-examples)
 - [Handle validation errors](#handle-validation-errors)
 - [Read the OpenAPI document](#read-the-openapi-document)
+- [Composing schemas](./docs/composing-schemas.md)
 - [Using ArkType](./docs/arktype.md)
 - [Using Zod](./docs/zod.md)
 - [Using Valibot](./docs/valibot.md)
@@ -151,6 +152,8 @@ that needs the document directly, call `app.getOpenAPIDocument(config)` with the
 
 ## Guides
 
+- [Compose schemas](./docs/composing-schemas.md): combine several schemas — possibly from different
+  libraries — into one response with `allOf` and `objectSchema`.
 - [Use ArkType](./docs/arktype.md): native JSON Schema, components, multiple responses, and errors.
 - [Use Zod](./docs/zod.md): components, multiple responses, and validation errors.
 - [Use Valibot](./docs/valibot.md): converter setup, components, multiple responses, and errors.
