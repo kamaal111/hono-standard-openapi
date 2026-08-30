@@ -52,6 +52,7 @@
     "@types/node": "^26.2.0",
     "@valibot/to-json-schema": "^1.7.1",
     "@vitest/coverage-v8": "^4.1.11",
+    "arktype": "^2.2.3",
     "eslint-plugin-import": "^2.32.0",
     "hono": "^4.13.1",
     "husky": "^9.1.7",

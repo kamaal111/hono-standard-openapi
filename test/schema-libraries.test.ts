@@ -1,5 +1,6 @@
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
+import { type as arkType } from 'arktype';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -9,6 +10,12 @@ import type { JsonObject } from '../src/json-value.ts';
 import { OpenAPIRegistry } from '../src/registry.ts';
 import type { StandardSchema } from '../src/standard-schema.ts';
 import type { RouteConfigBase, SchemaOrReference } from '../src/types.ts';
+
+declare global {
+  interface ArkEnv {
+    meta(): { $id?: string };
+  }
+}
 
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
 const JSON_TYPE = 'application/json';
@@ -49,6 +56,39 @@ const EXPECTED_PRICE_COMPONENT = {
 };
 
 const schemaLibraries: readonly SchemaLibrary[] = [
+  {
+    name: 'ArkType',
+    createCard: () => ({
+      schema: arkType({ id: 'string', name: 'string' }).configure({ $id: 'Card' }),
+    }),
+    createCardWithExample: () => ({
+      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
+      schema: arkType({
+        id: 'string',
+        name: arkType('string').configure({ examples: ['Luffy'] }),
+      }).configure({ $id: 'Card' }),
+    }),
+    createCardWithPrice: () => {
+      const Price = arkType({ amount: 'number' }).configure({ $id: 'Price' });
+
+      return { schema: arkType({ id: 'string', price: Price }).configure({ $id: 'Card' }) };
+    },
+    createParamsWithExample: () => ({
+      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
+      schema: arkType({
+        id: arkType('string >= 3').configure({ examples: ['1212121'] }),
+      }),
+    }),
+    createResponseSchemas: () => {
+      const Price = arkType({ amount: 'number' }).configure({ $id: 'Price' });
+
+      return {
+        card: arkType({ id: 'string', price: Price }).configure({ $id: 'Card' }),
+        error: arkType({ code: 'string', message: 'string' }).configure({ $id: 'ErrorResponse' }),
+      };
+    },
+    expectedSchemaId: 'Card',
+  },
   {
     name: 'Zod',
     createCard: () => ({ schema: z.object({ id: z.string(), name: z.string() }).meta({ $id: 'Card' }) }),

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
+import { type as arkType } from 'arktype';
 import { Hono } from 'hono';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
@@ -40,6 +41,16 @@ type SchemaLibrary = {
 };
 
 const schemaLibraries: readonly SchemaLibrary[] = [
+  {
+    name: 'ArkType',
+    createCardResponse: () => arkType({ id: 'string' }),
+    createCookieSchema: () => arkType({ session: 'string' }),
+    createNameSchema: () => arkType({ name: 'string' }),
+    createStringSchema: () => arkType('string'),
+    createTokenHeaderSchema: () => arkType({ 'x-token': 'string' }),
+    createUppercaseTokenHeaderSchema: () => arkType({ 'X-Token': 'string' }),
+    createUUIDParamsSchema: () => arkType({ cardId: 'string.uuid' }),
+  },
   {
     name: 'Zod',
     createCardResponse: () => z.object({ id: z.string() }),

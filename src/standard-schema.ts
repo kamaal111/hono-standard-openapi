@@ -18,7 +18,7 @@ export type SchemaValue = JSONSchema[string];
 export type SchemaIO = 'input' | 'output';
 
 export function isStandardSchema<T>(value: T): value is T & StandardSchemaV1 {
-  if (typeof value !== 'object' || value == null || !('~standard' in value)) {
+  if ((typeof value !== 'object' && typeof value !== 'function') || value == null || !('~standard' in value)) {
     return false;
   }
 
