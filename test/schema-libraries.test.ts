@@ -1,6 +1,7 @@
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
 import { type as arkType } from 'arktype';
+import * as S from 'sury';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -25,7 +26,7 @@ const JSON_TYPE = 'application/json';
 type Document = Record<string, ReturnType<typeof JSON.parse>>;
 
 type SchemaLibrary = {
-  readonly expectedSchemaId: string;
+  readonly supportsComponents: boolean;
   readonly name: string;
   createCard(): SchemaFixture;
   createCardWithExample(): ExampleSchemaFixture;
@@ -55,6 +56,8 @@ const EXPECTED_PRICE_COMPONENT = {
   required: ['amount'],
   type: 'object',
 };
+
+S.enableStandardJSONSchema();
 
 const schemaLibraries: readonly SchemaLibrary[] = [
   {
@@ -88,7 +91,7 @@ const schemaLibraries: readonly SchemaLibrary[] = [
         error: arkType({ code: 'string', message: 'string' }).configure({ $id: 'ErrorResponse' }),
       };
     },
-    expectedSchemaId: 'Card',
+    supportsComponents: true,
   },
   {
     name: 'Zod',
@@ -119,7 +122,7 @@ const schemaLibraries: readonly SchemaLibrary[] = [
         error: z.object({ code: z.string(), message: z.string() }).meta({ $id: 'ErrorResponse' }),
       };
     },
-    expectedSchemaId: 'Card',
+    supportsComponents: true,
   },
   {
     name: 'Zod Mini',
@@ -165,7 +168,7 @@ const schemaLibraries: readonly SchemaLibrary[] = [
 
       return { card: zMini.toJSONSchema(Card), error: zMini.toJSONSchema(ErrorResponse) };
     },
-    expectedSchemaId: 'Card',
+    supportsComponents: true,
   },
   {
     name: 'Valibot',
@@ -207,7 +210,29 @@ const schemaLibraries: readonly SchemaLibrary[] = [
         libraryOptions: { definitions: { Card, ErrorResponse, Price } },
       };
     },
-    expectedSchemaId: 'Card',
+    supportsComponents: true,
+  },
+  {
+    name: 'Sury',
+    createCard: () => ({ schema: S.schema({ id: S.string, name: S.string }) }),
+    createCardWithExample: () => ({
+      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
+      schema: S.schema({ id: S.string, name: S.string.with(S.meta, { examples: ['Luffy'] }) }),
+    }),
+    createCardWithPrice: () => ({
+      schema: S.schema({ id: S.string, price: S.schema({ amount: S.number }) }),
+    }),
+    createParamsWithExample: () => ({
+      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
+      schema: S.schema({
+        id: S.string.with(S.minLength, 3).with(S.meta, { examples: ['1212121'] }),
+      }),
+    }),
+    createResponseSchemas: () => ({
+      card: S.schema({ id: S.string, price: S.schema({ amount: S.number }) }),
+      error: S.schema({ code: S.string, message: S.string }),
+    }),
+    supportsComponents: false,
   },
 ];
 
@@ -229,7 +254,7 @@ describe.each(schemaLibraries)('$name', library => {
     expect(await Card['~standard'].validate({ id: 'card-1' })).toHaveProperty('issues');
   });
 
-  it('shares a named root schema across routes', () => {
+  it.skipIf(!library.supportsComponents)('shares a named root schema across routes', () => {
     const { libraryOptions, schema: Card } = library.createCard();
     const registry = new OpenAPIRegistry();
     registry.registerPath(jsonResponseRoute(Card, '/a'));
@@ -238,19 +263,19 @@ describe.each(schemaLibraries)('$name', library => {
     const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
 
     expect(document.paths?.['/a']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
-      $ref: `#/components/schemas/${library.expectedSchemaId}`,
+      $ref: '#/components/schemas/Card',
     });
     expect(document.paths?.['/b']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
-      $ref: `#/components/schemas/${library.expectedSchemaId}`,
+      $ref: '#/components/schemas/Card',
     });
-    expect(document.components?.schemas?.[library.expectedSchemaId]).toEqual({
+    expect(document.components?.schemas?.Card).toEqual({
       properties: { id: { type: 'string' }, name: { type: 'string' } },
       required: ['id', 'name'],
       type: 'object',
     });
   });
 
-  it('preserves schema examples from the library converter', () => {
+  it.skipIf(!library.supportsComponents)('preserves schema examples from the library converter', () => {
     const { expectedNameSchema, libraryOptions, schema: Card } = library.createCardWithExample();
     const registry = new OpenAPIRegistry();
     registry.registerPath(jsonResponseRoute(Card));
@@ -277,7 +302,21 @@ describe.each(schemaLibraries)('$name', library => {
     ]);
   });
 
-  it('shares a nested schema through an OpenAPI component reference', () => {
+  it.skipIf(library.supportsComponents)('emits unnamed schemas inline', () => {
+    const { schema: Card } = library.createCard();
+    const registry = new OpenAPIRegistry();
+    registry.registerPath(jsonResponseRoute(Card));
+
+    const document: Document = new OpenAPIGenerator(registry).generateDocument(DOC_CONFIG);
+
+    expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
+      properties: { id: { type: 'string' }, name: { type: 'string' } },
+      required: ['id', 'name'],
+      type: 'object',
+    });
+  });
+
+  it.skipIf(!library.supportsComponents)('shares a nested schema through an OpenAPI component reference', () => {
     const { libraryOptions, schema: Card } = library.createCardWithPrice();
     const registry = new OpenAPIRegistry();
     registry.registerPath(jsonResponseRoute(Card));
@@ -285,13 +324,13 @@ describe.each(schemaLibraries)('$name', library => {
     const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
 
     expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
-      $ref: `#/components/schemas/${library.expectedSchemaId}`,
+      $ref: '#/components/schemas/Card',
     });
     expect(document.components?.schemas?.Card.properties.price).toEqual(EXPECTED_NESTED_PRICE);
     expect(document.components?.schemas?.Price).toEqual(EXPECTED_PRICE_COMPONENT);
   });
 
-  it('documents successful and error responses as components', () => {
+  it.skipIf(!library.supportsComponents)('documents successful and error responses as components', () => {
     const { card, error, libraryOptions } = library.createResponseSchemas();
     const registry = new OpenAPIRegistry();
     registry.registerPath({

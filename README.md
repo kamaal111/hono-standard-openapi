@@ -6,6 +6,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 ## Index
 
 - [Installation](#installation)
+- [Schema-library support](#schema-library-support)
 - [Set up a route](#set-up-a-route)
 - [Add middleware to a route](#add-middleware-to-a-route)
 - [Add response examples](#add-response-examples)
@@ -15,6 +16,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 - [Using ArkType](./docs/arktype.md)
 - [Using Zod](./docs/zod.md)
 - [Using Valibot](./docs/valibot.md)
+- [Using Sury](./docs/sury.md)
 
 ## Installation
 
@@ -27,6 +29,22 @@ Install one supported schema library as well. The examples below use Zod:
 ```sh
 pnpm add zod
 ```
+
+## Schema-library support
+
+The libraries below are supported for request validation and OpenAPI generation.
+
+| Library                            | Request validation | OpenAPI schemas | Named components                |
+| ---------------------------------- | ------------------ | --------------- | ------------------------------- |
+| [ArkType](./docs/arktype.md)       | ✅                 | ✅              | ✅                              |
+| [Zod](./docs/zod.md)               | ✅                 | ✅              | ✅                              |
+| [Zod Mini](./docs/zod.md#zod-mini) | ✅                 | ✅              | ✅                              |
+| [Valibot](./docs/valibot.md)       | ✅                 | ✅              | ✅                              |
+| [Sury](./docs/sury.md)             | ✅                 | ✅              | ❌ — schemas are emitted inline |
+
+Sury requires `S.enableStandardJSONSchema()` once before routes are registered.
+Its schemas do not currently emit names for reusable OpenAPI components, so
+their generated OpenAPI schemas remain inline.
 
 ## Set up a route
 
@@ -92,7 +110,7 @@ const getCard = createRoute({
 ## Add response examples
 
 Put an OpenAPI `example` next to a response media type. This is independent of the schema library,
-so it works with ArkType, Zod, Valibot, and every other supported Standard Schema library:
+so it works with ArkType, Zod, Valibot, Sury, and every other supported Standard Schema library:
 
 ```ts
 responses: {
@@ -157,3 +175,4 @@ that needs the document directly, call `app.getOpenAPIDocument(config)` with the
 - [Use ArkType](./docs/arktype.md): native JSON Schema, components, multiple responses, and errors.
 - [Use Zod](./docs/zod.md): components, multiple responses, and validation errors.
 - [Use Valibot](./docs/valibot.md): converter setup, components, multiple responses, and errors.
+- [Use Sury](./docs/sury.md): native JSON Schema and request validation.

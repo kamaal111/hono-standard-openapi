@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
 import { type as arkType } from 'arktype';
 import { Hono } from 'hono';
+import * as S from 'sury';
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -17,6 +18,8 @@ import type { StandardSchema } from '../src/standard-schema.ts';
 const JSON_TYPE = 'application/json';
 
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
+
+S.enableStandardJSONSchema();
 
 /** Reads a response body as a JSON object. */
 async function readJson(response: Response): Promise<JsonObject> {
@@ -81,6 +84,16 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'x-token': v.string() })),
     createUppercaseTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'X-Token': v.string() })),
     createUUIDParamsSchema: () => toStandardJsonSchema(v.object({ cardId: v.pipe(v.string(), v.uuid()) })),
+  },
+  {
+    name: 'Sury',
+    createCardResponse: () => S.schema({ id: S.string }),
+    createCookieSchema: () => S.schema({ session: S.string }),
+    createNameSchema: () => S.schema({ name: S.string }),
+    createStringSchema: () => S.string,
+    createTokenHeaderSchema: () => S.schema({ 'x-token': S.string }),
+    createUppercaseTokenHeaderSchema: () => S.schema({ 'X-Token': S.string }),
+    createUUIDParamsSchema: () => S.schema({ cardId: S.uuid }),
   },
 ];
 
