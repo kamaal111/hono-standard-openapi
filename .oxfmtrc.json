@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [".agents/**", ".codex/**", "dist", "pnpm-lock.yaml", ".env"],
+  "ignorePatterns": [".agents/**", ".codex/**", "dist", "pnpm-lock.yaml", ".env", "test/fixtures/**"],
   "printWidth": 120,
   "arrowParens": "avoid",
   "singleQuote": true
