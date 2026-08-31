@@ -107,3 +107,7 @@ The generated document contains `Card`, `Price`, and `ErrorResponse` in `compone
   }
 }
 ```
+
+If a Valibot schema transforms a value during validation (`v.transform()`), the generated response
+schema still describes the value as it looked before validation, not the transformed value your
+handler returns.

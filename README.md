@@ -35,21 +35,22 @@ pnpm add zod
 
 The libraries below are supported for request validation and OpenAPI generation.
 
-| Library                            | Request validation | OpenAPI schemas | Named components                |
-| ---------------------------------- | ------------------ | --------------- | ------------------------------- |
-| [ArkType](./docs/arktype.md)       | ✅                 | ✅              | ✅                              |
-| [Zod](./docs/zod.md)               | ✅                 | ✅              | ✅                              |
-| [Zod Mini](./docs/zod.md#zod-mini) | ✅                 | ✅              | ✅                              |
-| [Valibot](./docs/valibot.md)       | ✅                 | ✅              | ✅                              |
-| [Sury](./docs/sury.md)             | ✅                 | ✅              | ❌ — schemas are emitted inline |
-| [VineJS](./docs/vinejs.md)         | ✅                 | ✅              | ❌ — schemas are emitted inline |
+| Library                            | Request validation | OpenAPI schemas | Named components                | `openapi-3.0` documents | Responses show transforms              |
+| ---------------------------------- | ------------------ | --------------- | ------------------------------- | ----------------------- | -------------------------------------- |
+| [ArkType](./docs/arktype.md)       | ✅                 | ✅              | ✅                              | ❌ — throws             | ✅                                     |
+| [Zod](./docs/zod.md)               | ✅                 | ✅              | ✅                              | ✅                      | ✅                                     |
+| [Zod Mini](./docs/zod.md#zod-mini) | ✅                 | ✅              | ✅                              | ✅                      | ✅                                     |
+| [Valibot](./docs/valibot.md)       | ✅                 | ✅              | ✅                              | ✅                      | ❌ — shows the value before validation |
+| [Sury](./docs/sury.md)             | ✅                 | ✅              | ❌ — schemas are emitted inline | ✅                      | ❌ — shows the value before validation |
+| [VineJS](./docs/vinejs.md)         | ✅                 | ✅              | ❌ — schemas are emitted inline | ✅                      | ❌ — shows the value before validation |
 
-Sury requires `S.enableStandardJSONSchema()` once before routes are registered.
-Its schemas do not currently emit names for reusable OpenAPI components, so
-their generated OpenAPI schemas remain inline.
+`openapi-3.0` documents: can the library generate a `version: '3.0'` document, or only the default
+`version: '3.1'`?
 
-VineJS v4.3.0 and later exposes compiled validators through its Standard JSON
-Schema input converter. Its response schemas are emitted inline.
+Responses show transforms: some schemas change a value during validation — coercing a string to a
+number, applying a default. This says whether the response schema in the generated document
+matches what your handler actually returns (✅), or still describes the value as it looked before
+validation (❌).
 
 ## Set up a route
 
