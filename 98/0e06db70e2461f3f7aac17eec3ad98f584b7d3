@@ -1,0 +1,57 @@
+package.json
+  s_db1e822458d9a6::t_b1c7c80d950789 64
+docs/stnl.md
+  s_db1e822458d9a6::t_b53b8a0200ac47 1-10,14-18,20-38
+  s_db1e822458d9a6::t_20b625582ab28b 11-13
+  s_db1e822458d9a6::t_459e066a80eaf0 19
+test/schema-libraries.test.ts
+  s_db1e822458d9a6::t_2da92d00b1c63a 397-399
+  s_165771d76d00e8::t_6192f8f502efa2 400
+  s_db1e822458d9a6::t_b53b8a0200ac47 5,378,387,389-396
+  s_db1e822458d9a6::t_d8d99a29dfb675 379-386,388
+src/standard-schema.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 11-13,33
+src/types.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 16,38
+  s_db1e822458d9a6::t_1435e45db4e86e 21
+src/json-schema.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 8,196,201-205,207-212
+  s_db1e822458d9a6::t_20b625582ab28b 206
+README.md
+  s_db1e822458d9a6::t_b53b8a0200ac47 20,185
+src/registry.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 2,27,41,54,61
+src/app.ts
+  s_db1e822458d9a6::t_1435e45db4e86e 10,157
+pnpm-lock.yaml
+  s_db1e822458d9a6::t_74c78f3bc450e6 262-264,1861-1863,3611-3612
+test/json-schema.test.ts
+  s_db1e822458d9a6::t_20b625582ab28b 40,55,59-82,85
+  s_db1e822458d9a6::t_e375e274d7e6e2 7,41-54,56-58,83-84,86-87
+src/generator.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 22,173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "980e06db70e2461f3f7aac17eec3ad98f584b7d3",
+  "prompts": {},
+  "sessions": {
+    "s_165771d76d00e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0569e-33f2-7fa2-b108-a88ff6f57ed3",
+        "model": "unknown"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    },
+    "s_db1e822458d9a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0569d-8d1e-79b2-a047-5bfabf398aa0",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": null
+    }
+  }
+}
