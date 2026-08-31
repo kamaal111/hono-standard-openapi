@@ -1,0 +1,32 @@
+README.md
+  s_e02658583fc852::t_943c0af75539cd 18,96,161
+package.json
+  s_e02658583fc852::t_d2079a0ccf6535 63
+test/schema-libraries.test.ts
+  s_e02658583fc852::t_943c0af75539cd 4,60-61,341-355,357
+  s_e02658583fc852::t_fd8de68f4be938 356
+  s_e02658583fc852::t_bb1fa42461fb41 358-359
+docs/sury.md
+  s_e02658583fc852::t_943c0af75539cd 1-52
+test/app.test.ts
+  s_e02658583fc852::t_943c0af75539cd 6,22-23,88-96
+  s_e02658583fc852::t_ba4eefbd7ffd4b 97
+pnpm-lock.yaml
+  s_e02658583fc852::t_8a702cd9100c1f 259-261,1894-1901,3646-3647
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "51b3db95e694c0bdb66012e12129c5f99ffddc16",
+  "prompts": {},
+  "sessions": {
+    "s_e02658583fc852": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0569d-259b-7c02-b635-165b55b00e6c",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
