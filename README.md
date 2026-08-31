@@ -17,6 +17,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 - [Using Zod](./docs/zod.md)
 - [Using Valibot](./docs/valibot.md)
 - [Using Sury](./docs/sury.md)
+- [Using VineJS](./docs/vinejs.md)
 
 ## Installation
 
@@ -41,10 +42,14 @@ The libraries below are supported for request validation and OpenAPI generation.
 | [Zod Mini](./docs/zod.md#zod-mini) | ✅                 | ✅              | ✅                              |
 | [Valibot](./docs/valibot.md)       | ✅                 | ✅              | ✅                              |
 | [Sury](./docs/sury.md)             | ✅                 | ✅              | ❌ — schemas are emitted inline |
+| [VineJS](./docs/vinejs.md)         | ✅                 | ✅              | ❌ — schemas are emitted inline |
 
 Sury requires `S.enableStandardJSONSchema()` once before routes are registered.
 Its schemas do not currently emit names for reusable OpenAPI components, so
 their generated OpenAPI schemas remain inline.
+
+VineJS v4.3.0 and later exposes compiled validators through its Standard JSON
+Schema input converter. Its response schemas are emitted inline.
 
 ## Set up a route
 
@@ -176,3 +181,4 @@ that needs the document directly, call `app.getOpenAPIDocument(config)` with the
 - [Use Zod](./docs/zod.md): components, multiple responses, and validation errors.
 - [Use Valibot](./docs/valibot.md): converter setup, components, multiple responses, and errors.
 - [Use Sury](./docs/sury.md): native JSON Schema and request validation.
+- [Use VineJS](./docs/vinejs.md): native Standard JSON Schema and request validation.
