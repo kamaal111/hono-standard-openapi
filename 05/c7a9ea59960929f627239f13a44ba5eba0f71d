@@ -1,0 +1,36 @@
+package.json
+  s_4f39406797f172::t_d6bf07fd17ff37 54
+README.md
+  s_4f39406797f172::t_6960b2f3eeea51 20,184
+docs/vinejs.md
+  s_4f39406797f172::t_6960b2f3eeea51 1-38
+  s_4f39406797f172::t_921e11dc2a979d 39-43
+src/json-schema.ts
+  s_4f39406797f172::t_568836b851c98e 203-206
+  s_4f39406797f172::t_921e11dc2a979d 201-202,207,212-217
+  s_4f39406797f172::t_0b33eda3399186 218-219
+test/app.test.ts
+  s_4f39406797f172::t_8e1470089ad772 566
+  s_4f39406797f172::t_921e11dc2a979d 546-563,567-572
+  s_4f39406797f172::t_5f67678d22bef2 564-565
+  s_4f39406797f172::t_6960b2f3eeea51 4,99-107
+  s_4f39406797f172::t_8bb9a154281587 108
+pnpm-lock.yaml
+  s_4f39406797f172::t_b5c10e48bf6eb5 232-234,669-674,798-800,926-933,1059-1062,1100-1102,1135-1137,1674-1677,2001-2004,2372-2375,2444-2445,2510-2524,2699-2700,2742-2743,2772-2773,3377-3378,3812-3813
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "05c7a9ea59960929f627239f13a44ba5eba0f71d",
+  "prompts": {},
+  "sessions": {
+    "s_4f39406797f172": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0569c-bd38-7361-b51f-a099bccaf94a",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
