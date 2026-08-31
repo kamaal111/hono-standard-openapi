@@ -50,3 +50,7 @@ Sury schemas are used directly for request validation and OpenAPI generation.
 Its converter describes the input schema, so transformed Sury schemas document
 the format API clients send. Use Sury's `S.meta` to add titles, descriptions,
 or schema examples.
+
+Sury does not currently name schemas for reusable OpenAPI components, so its generated schemas are
+always written inline rather than hoisted into `components.schemas`. It supports generating
+`version: '3.0'` documents (`app.doc(path, config, { version: '3.0' })`) as well as `version: '3.1'`.

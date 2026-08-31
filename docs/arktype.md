@@ -112,3 +112,9 @@ The generated document contains `Card`, `Price`, and `ErrorResponse` in `compone
 ArkType throws when a schema cannot be represented as JSON Schema (for example, some transforms or
 custom predicates). Keep route schemas JSON-Schema-compatible, or configure ArkType's JSON Schema
 fallback behavior before generating the document.
+
+ArkType's converter also throws for the `"openapi-3.0"` JSON Schema target, so `app.doc()` and
+`getOpenAPIDocument()` can only generate `version: '3.1'` documents (the default) for routes built
+with ArkType schemas. Requesting `version: '3.0'` throws. See the
+[schema-library support table](../README.md#schema-library-support) for how this compares to the
+other supported libraries.

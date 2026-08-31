@@ -41,3 +41,8 @@ uses that same schema for response documentation because a compiled VineJS valid
 returns the same object shape. VineJS emits each schema inline, so the example response schema is
 written directly in the OpenAPI operation rather than being automatically hoisted into
 `components.schemas`.
+
+If a VineJS schema transforms a value during validation, the generated response schema still
+describes the value as it looked before validation, not the transformed value your handler
+returns. VineJS supports generating `version: '3.0'` documents (`app.doc(path, config, { version: '3.0' })`)
+as well as `version: '3.1'`.
