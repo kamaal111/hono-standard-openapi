@@ -1,0 +1,33 @@
+docs/sury.md
+  s_e02658583fc852::t_943c0af75539cd 1-52
+package.json
+  s_e02658583fc852::t_d2079a0ccf6535 63
+pnpm-lock.yaml
+  s_e02658583fc852::t_8a702cd9100c1f 259-261,1894-1901,3646-3647
+test/schema-libraries.test.ts
+  s_e02658583fc852::t_dfa66db39b2b3c 30,96,128,175,218-241,263,325,339
+  s_e02658583fc852::t_7510d37499f0e1 284,311-322
+  s_e02658583fc852::t_943c0af75539cd 4,61-62
+  s_e02658583fc852::t_815845f9380667 323-324
+test/app.test.ts
+  s_e02658583fc852::t_ba4eefbd7ffd4b 97
+  s_e02658583fc852::t_943c0af75539cd 6,22-23,88-96
+README.md
+  s_e02658583fc852::t_943c0af75539cd 18,96,161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "1735695477ec591789d59c01fbabd815c9166031",
+  "prompts": {},
+  "sessions": {
+    "s_e02658583fc852": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0569d-259b-7c02-b635-165b55b00e6c",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": null
+    }
+  }
+}
