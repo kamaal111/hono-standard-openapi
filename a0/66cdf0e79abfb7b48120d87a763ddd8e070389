@@ -1,0 +1,54 @@
+pnpm-lock.yaml
+  s_db1e822458d9a6::t_74c78f3bc450e6 259-261,1858-1860,3600-3601
+src/standard-schema.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 11-13,33
+src/registry.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 2,27,41,54,61
+src/app.ts
+  s_db1e822458d9a6::t_1435e45db4e86e 10,157
+README.md
+  s_db1e822458d9a6::t_b53b8a0200ac47 18,66,161
+src/types.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 16,38
+  s_db1e822458d9a6::t_1435e45db4e86e 21
+src/generator.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 22,173
+test/schema-libraries.test.ts
+  s_165771d76d00e8::t_6192f8f502efa2 361
+  s_db1e822458d9a6::t_d8d99a29dfb675 340-347,349
+  s_db1e822458d9a6::t_b53b8a0200ac47 4,339,348,350-357
+  s_db1e822458d9a6::t_2da92d00b1c63a 358-360
+test/json-schema.test.ts
+  s_db1e822458d9a6::t_e375e274d7e6e2 7,40-63
+package.json
+  s_db1e822458d9a6::t_b1c7c80d950789 63
+src/json-schema.ts
+  s_db1e822458d9a6::t_b53b8a0200ac47 8,196,201-212
+docs/stnl.md
+  s_db1e822458d9a6::t_b53b8a0200ac47 1-18,20-38
+  s_db1e822458d9a6::t_459e066a80eaf0 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "a066cdf0e79abfb7b48120d87a763ddd8e070389",
+  "prompts": {},
+  "sessions": {
+    "s_165771d76d00e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0569e-33f2-7fa2-b108-a88ff6f57ed3",
+        "model": "unknown"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    },
+    "s_db1e822458d9a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0569d-8d1e-79b2-a047-5bfabf398aa0",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": null
+    }
+  }
+}
