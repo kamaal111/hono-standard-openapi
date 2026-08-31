@@ -1,0 +1,46 @@
+docs/arktype.md
+  s_78b7a4e6af85c3::t_b522527753d306 115-120
+docs/sury.md
+  s_78b7a4e6af85c3::t_a21120f8cb9b81 55-56
+  s_78b7a4e6af85c3::t_59e9d58d9bd6b9 53-54
+test/schema-libraries.test.ts
+  s_78b7a4e6af85c3::t_3e5171b439ab85 31-37,42
+  s_78b7a4e6af85c3::t_74e9f2b550ea9c 451-458,463-468,470
+  s_78b7a4e6af85c3::t_20161691a8a7ca 381,448
+  s_78b7a4e6af85c3::t_1d9193a299c421 23
+  s_78b7a4e6af85c3::t_b8885e735cfe21 459-460,469
+  s_78b7a4e6af85c3::t_f2c68dd8966731 189-191,193
+  s_78b7a4e6af85c3::t_46464198e789b2 68-72
+  s_78b7a4e6af85c3::t_5f08f1f8e91f12 313-324
+  s_78b7a4e6af85c3::t_b97d898a41aa13 421-447,449-450
+  s_78b7a4e6af85c3::t_eb05677035f646 100,110
+  s_78b7a4e6af85c3::t_e25bbe75b5543a 235,237
+  s_78b7a4e6af85c3::t_30458f66b34348 255,261
+  s_78b7a4e6af85c3::t_84fe8251d52bab 371-380,382-383
+  s_78b7a4e6af85c3::t_467c8939f7fc0d 133,143
+docs/vinejs.md
+  s_78b7a4e6af85c3::t_82c7185adbde77 44
+  s_78b7a4e6af85c3::t_e9538cd1729bca 45-48
+docs/valibot.md
+  s_78b7a4e6af85c3::t_7495fdc1095905 110-113
+README.md
+  s_78b7a4e6af85c3::t_cfa82038ba2562 46,49
+  s_78b7a4e6af85c3::t_69c58f8d390260 47-48,50-53
+  s_78b7a4e6af85c3::t_cc95dd14d803b7 38-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "905ccb9f1d1b3494f6f1dd95fb537a9fa8886094",
+  "prompts": {},
+  "sessions": {
+    "s_78b7a4e6af85c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "434f320d-37a3-4ddd-b21a-737b8dc40a19",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
