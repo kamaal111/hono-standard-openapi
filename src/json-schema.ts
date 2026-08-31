@@ -198,9 +198,21 @@ function describe(
   target: JSONSchemaTarget,
   libraryOptions: StandardJSONSchemaV1.Options['libraryOptions'],
 ): JSONSchema {
-  const { $schema: _dialect, ...rest } = schema['~standard'].jsonSchema[io]({ libraryOptions, target });
+  const converter = schema['~standard'].jsonSchema;
+  const options = { libraryOptions, target };
+  const raw = io === 'output' ? describeOutput(converter, options) : converter.input(options);
+  const { $schema: _dialect, ...rest } = raw;
 
   return rest;
+}
+
+/** Uses an input schema when a library does not expose a separate output schema. */
+function describeOutput(converter: StandardJSONSchemaV1.Converter, options: StandardJSONSchemaV1.Options): JSONSchema {
+  try {
+    return converter.output(options);
+  } catch {
+    return converter.input(options);
+  }
 }
 
 interface WalkContext {

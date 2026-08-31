@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { toStandardJsonSchema } from '@valibot/to-json-schema';
+import vine from '@vinejs/vine';
 import { type as arkType } from 'arktype';
 import { Hono } from 'hono';
 import * as S from 'sury';
@@ -94,6 +95,16 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createTokenHeaderSchema: () => S.schema({ 'x-token': S.string }),
     createUppercaseTokenHeaderSchema: () => S.schema({ 'X-Token': S.string }),
     createUUIDParamsSchema: () => S.schema({ cardId: S.uuid }),
+  },
+  {
+    name: 'VineJS',
+    createCardResponse: () => vine.create({ id: vine.string() }),
+    createCookieSchema: () => vine.create({ session: vine.string() }),
+    createNameSchema: () => vine.create({ name: vine.string() }),
+    createStringSchema: () => vine.create(vine.string()),
+    createTokenHeaderSchema: () => vine.create({ 'x-token': vine.string() }),
+    createUppercaseTokenHeaderSchema: () => vine.create({ 'X-Token': vine.string() }),
+    createUUIDParamsSchema: () => vine.create({ cardId: vine.string().uuid() }),
   },
 ];
 

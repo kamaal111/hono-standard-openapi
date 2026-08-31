@@ -36,6 +36,30 @@ describe('ComponentCollector', () => {
 });
 
 describe('schema conversion edge cases', () => {
+  it('uses the input schema when output conversion is unavailable', () => {
+    const inputOnlySchema = {
+      '~standard': {
+        jsonSchema: {
+          input: () => ({ type: 'string' }),
+          output: () => {
+            throw new Error('output conversion is unavailable');
+          },
+        },
+        validate: () => ({ value: undefined }),
+        vendor: 'input-only',
+        version: 1,
+      },
+    };
+
+    expect(
+      convertSchema(inputOnlySchema, {
+        components: new ComponentCollector(),
+        io: 'output',
+        target: 'draft-2020-12',
+      }),
+    ).toEqual({ type: 'string' });
+  });
+
   it('identifies unsupported schema vendors when possible', () => {
     expect(() =>
       convertSchema(null, { components: new ComponentCollector(), io: 'output', target: 'draft-2020-12' }),
