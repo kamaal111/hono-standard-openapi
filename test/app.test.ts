@@ -11,6 +11,7 @@ import { z } from 'zod';
 import * as zMini from 'zod/mini';
 
 import { standardSchema } from './helpers.ts';
+import { type LibraryRecord, listLibraries } from './library-names.ts';
 import { $, StandardOpenAPIHono } from '../src/app.ts';
 import type { JsonObject } from '../src/json-value.ts';
 import { createRoute } from '../src/route.ts';
@@ -35,7 +36,6 @@ function issueCount(body: JsonObject): number {
 }
 
 type SchemaLibrary = {
-  readonly name: string;
   createCardResponse(): StandardSchema;
   createCookieSchema(): StandardSchema;
   createNameSchema(): StandardSchema;
@@ -45,9 +45,8 @@ type SchemaLibrary = {
   createUUIDParamsSchema(): StandardSchema;
 };
 
-const schemaLibraries: readonly SchemaLibrary[] = [
-  {
-    name: 'ArkType',
+const schemaLibraryRecord: LibraryRecord<SchemaLibrary> = {
+  ArkType: {
     createCardResponse: () => arkType({ id: 'string' }),
     createCookieSchema: () => arkType({ session: 'string' }),
     createNameSchema: () => arkType({ name: 'string' }),
@@ -56,38 +55,7 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createUppercaseTokenHeaderSchema: () => arkType({ 'X-Token': 'string' }),
     createUUIDParamsSchema: () => arkType({ cardId: 'string.uuid' }),
   },
-  {
-    name: 'Zod',
-    createCardResponse: () => z.object({ id: z.string() }),
-    createCookieSchema: () => z.object({ session: z.string() }),
-    createNameSchema: () => z.object({ name: z.string() }),
-    createStringSchema: () => z.string(),
-    createTokenHeaderSchema: () => z.object({ 'x-token': z.string() }),
-    createUppercaseTokenHeaderSchema: () => z.object({ 'X-Token': z.string() }),
-    createUUIDParamsSchema: () => z.object({ cardId: z.uuid() }),
-  },
-  {
-    name: 'Zod Mini',
-    createCardResponse: () => zMini.toJSONSchema(zMini.object({ id: zMini.string() })),
-    createCookieSchema: () => zMini.toJSONSchema(zMini.object({ session: zMini.string() })),
-    createNameSchema: () => zMini.toJSONSchema(zMini.object({ name: zMini.string() })),
-    createStringSchema: () => zMini.toJSONSchema(zMini.string()),
-    createTokenHeaderSchema: () => zMini.toJSONSchema(zMini.object({ 'x-token': zMini.string() })),
-    createUppercaseTokenHeaderSchema: () => zMini.toJSONSchema(zMini.object({ 'X-Token': zMini.string() })),
-    createUUIDParamsSchema: () => zMini.toJSONSchema(zMini.object({ cardId: zMini.uuid() })),
-  },
-  {
-    name: 'Valibot',
-    createCardResponse: () => toStandardJsonSchema(v.object({ id: v.string() })),
-    createCookieSchema: () => toStandardJsonSchema(v.object({ session: v.string() })),
-    createNameSchema: () => toStandardJsonSchema(v.object({ name: v.string() })),
-    createStringSchema: () => toStandardJsonSchema(v.string()),
-    createTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'x-token': v.string() })),
-    createUppercaseTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'X-Token': v.string() })),
-    createUUIDParamsSchema: () => toStandardJsonSchema(v.object({ cardId: v.pipe(v.string(), v.uuid()) })),
-  },
-  {
-    name: 'Sury',
+  Sury: {
     createCardResponse: () => S.schema({ id: S.string }),
     createCookieSchema: () => S.schema({ session: S.string }),
     createNameSchema: () => S.schema({ name: S.string }),
@@ -96,8 +64,16 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createUppercaseTokenHeaderSchema: () => S.schema({ 'X-Token': S.string }),
     createUUIDParamsSchema: () => S.schema({ cardId: S.uuid }),
   },
-  {
-    name: 'VineJS',
+  Valibot: {
+    createCardResponse: () => toStandardJsonSchema(v.object({ id: v.string() })),
+    createCookieSchema: () => toStandardJsonSchema(v.object({ session: v.string() })),
+    createNameSchema: () => toStandardJsonSchema(v.object({ name: v.string() })),
+    createStringSchema: () => toStandardJsonSchema(v.string()),
+    createTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'x-token': v.string() })),
+    createUppercaseTokenHeaderSchema: () => toStandardJsonSchema(v.object({ 'X-Token': v.string() })),
+    createUUIDParamsSchema: () => toStandardJsonSchema(v.object({ cardId: v.pipe(v.string(), v.uuid()) })),
+  },
+  VineJS: {
     createCardResponse: () => vine.create({ id: vine.string() }),
     createCookieSchema: () => vine.create({ session: vine.string() }),
     createNameSchema: () => vine.create({ name: vine.string() }),
@@ -106,7 +82,27 @@ const schemaLibraries: readonly SchemaLibrary[] = [
     createUppercaseTokenHeaderSchema: () => vine.create({ 'X-Token': vine.string() }),
     createUUIDParamsSchema: () => vine.create({ cardId: vine.string().uuid() }),
   },
-];
+  Zod: {
+    createCardResponse: () => z.object({ id: z.string() }),
+    createCookieSchema: () => z.object({ session: z.string() }),
+    createNameSchema: () => z.object({ name: z.string() }),
+    createStringSchema: () => z.string(),
+    createTokenHeaderSchema: () => z.object({ 'x-token': z.string() }),
+    createUppercaseTokenHeaderSchema: () => z.object({ 'X-Token': z.string() }),
+    createUUIDParamsSchema: () => z.object({ cardId: z.uuid() }),
+  },
+  'Zod Mini': {
+    createCardResponse: () => zMini.toJSONSchema(zMini.object({ id: zMini.string() })),
+    createCookieSchema: () => zMini.toJSONSchema(zMini.object({ session: zMini.string() })),
+    createNameSchema: () => zMini.toJSONSchema(zMini.object({ name: zMini.string() })),
+    createStringSchema: () => zMini.toJSONSchema(zMini.string()),
+    createTokenHeaderSchema: () => zMini.toJSONSchema(zMini.object({ 'x-token': zMini.string() })),
+    createUppercaseTokenHeaderSchema: () => zMini.toJSONSchema(zMini.object({ 'X-Token': zMini.string() })),
+    createUUIDParamsSchema: () => zMini.toJSONSchema(zMini.object({ cardId: zMini.uuid() })),
+  },
+};
+
+const schemaLibraries = listLibraries(schemaLibraryRecord);
 
 function createCardRoute(library: SchemaLibrary) {
   return createRoute({

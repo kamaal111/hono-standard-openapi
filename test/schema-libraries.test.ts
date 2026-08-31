@@ -1,57 +1,12 @@
-import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
-import { toStandardJsonSchema } from '@valibot/to-json-schema';
-import { type as arkType } from 'arktype';
-import * as S from 'sury';
-import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
-import * as zMini from 'zod/mini';
 
-import { OpenAPIGenerator } from '../src/generator.ts';
-import type { JsonObject } from '../src/json-value.ts';
-import { OpenAPIRegistry } from '../src/registry.ts';
-import type { StandardSchema } from '../src/standard-schema.ts';
+import { fetchDocument, generateDocument } from './helpers.ts';
+import { schemaLibraries } from './schema-libraries.ts';
 import type { RouteConfigBase, SchemaOrReference } from '../src/types.ts';
-
-declare global {
-  interface ArkEnv {
-    meta(): { $id?: string };
-  }
-}
 
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
 const DOC_CONFIG_3_0 = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.0.3' };
 const JSON_TYPE = 'application/json';
-
-/** The generated document, read as plain JSON so assertions can reach into it freely. */
-type Document = Record<string, ReturnType<typeof JSON.parse>>;
-
-type SchemaLibrary = {
-  supportsComponents: boolean;
-  supportsOpenapi30Target: boolean;
-  name: string;
-  createCard(): SchemaFixture;
-  createCardWithExample(): ExampleSchemaFixture;
-  createCardWithPrice(): SchemaFixture;
-  createNullableField(): SchemaFixture;
-  createParamsWithExample(): ExampleSchemaFixture;
-  createResponseSchemas(): ResponseSchemas;
-};
-
-type SchemaFixture = {
-  readonly libraryOptions?: StandardJSONSchemaV1.Options['libraryOptions'];
-  readonly schema: StandardSchema;
-};
-
-type ExampleSchemaFixture = SchemaFixture & {
-  readonly expectedNameSchema: JsonObject;
-};
-
-type ResponseSchemas = {
-  readonly card: StandardSchema;
-  readonly error: StandardSchema;
-  readonly libraryOptions?: StandardJSONSchemaV1.Options['libraryOptions'];
-};
 
 const EXPECTED_NESTED_PRICE = { $ref: '#/components/schemas/Price' };
 const EXPECTED_PRICE_COMPONENT = {
@@ -64,197 +19,6 @@ const EXPECTED_ERROR_RESPONSE_COMPONENT = {
   required: ['code', 'message'],
   type: 'object',
 };
-
-S.enableStandardJSONSchema();
-
-const schemaLibraries: readonly SchemaLibrary[] = [
-  {
-    name: 'ArkType',
-    createCard: () => ({
-      schema: arkType({ id: 'string', name: 'string' }).configure({ $id: 'Card' }),
-    }),
-    createCardWithExample: () => ({
-      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
-      schema: arkType({
-        id: 'string',
-        name: arkType('string').configure({ examples: ['Luffy'] }),
-      }).configure({ $id: 'Card' }),
-    }),
-    createCardWithPrice: () => {
-      const Price = arkType({ amount: 'number' }).configure({ $id: 'Price' });
-
-      return { schema: arkType({ id: 'string', price: Price }).configure({ $id: 'Card' }) };
-    },
-    createParamsWithExample: () => ({
-      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
-      schema: arkType({
-        id: arkType('string >= 3').configure({ examples: ['1212121'] }),
-      }),
-    }),
-    createNullableField: () => ({ schema: arkType({ name: 'string|null' }) }),
-    createResponseSchemas: () => {
-      const Price = arkType({ amount: 'number' }).configure({ $id: 'Price' });
-
-      return {
-        card: arkType({ id: 'string', price: Price }).configure({ $id: 'Card' }),
-        error: arkType({ code: 'string', message: 'string' }).configure({ $id: 'ErrorResponse' }),
-      };
-    },
-    supportsComponents: true,
-    supportsOpenapi30Target: false,
-  },
-  {
-    name: 'Zod',
-    createCard: () => ({ schema: z.object({ id: z.string(), name: z.string() }).meta({ $id: 'Card' }) }),
-    createCardWithExample: () => ({
-      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
-      schema: z.object({ id: z.string(), name: z.string().meta({ examples: ['Luffy'] }) }).meta({ $id: 'Card' }),
-    }),
-    createCardWithPrice: () => {
-      const Price = z.object({ amount: z.number() }).meta({ $id: 'Price' });
-
-      return { schema: z.object({ id: z.string(), price: Price }).meta({ $id: 'Card' }) };
-    },
-    createParamsWithExample: () => ({
-      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
-      schema: z.object({
-        id: z
-          .string()
-          .min(3)
-          .meta({ examples: ['1212121'] }),
-      }),
-    }),
-    createNullableField: () => ({ schema: z.object({ name: z.string().nullable() }) }),
-    createResponseSchemas: () => {
-      const Price = z.object({ amount: z.number() }).meta({ $id: 'Price' });
-
-      return {
-        card: z.object({ id: z.string(), price: Price }).meta({ $id: 'Card' }),
-        error: z.object({ code: z.string(), message: z.string() }).meta({ $id: 'ErrorResponse' }),
-      };
-    },
-    supportsComponents: true,
-    supportsOpenapi30Target: true,
-  },
-  {
-    name: 'Zod Mini',
-    createCard: () => ({
-      schema: zMini.toJSONSchema(
-        zMini.object({ id: zMini.string(), name: zMini.string() }).check(zMini.meta({ $id: 'Card' })),
-      ),
-    }),
-    createCardWithExample: () => ({
-      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
-      schema: zMini.toJSONSchema(
-        zMini
-          .object({
-            id: zMini.string(),
-            name: zMini.string().check(zMini.meta({ examples: ['Luffy'] })),
-          })
-          .check(zMini.meta({ $id: 'Card' })),
-      ),
-    }),
-    createCardWithPrice: () => {
-      const Price = zMini.object({ amount: zMini.number() }).check(zMini.meta({ $id: 'Price' }));
-
-      return {
-        schema: zMini.toJSONSchema(
-          zMini.object({ id: zMini.string(), price: Price }).check(zMini.meta({ $id: 'Card' })),
-        ),
-      };
-    },
-    createParamsWithExample: () => ({
-      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
-      schema: zMini.toJSONSchema(
-        zMini.object({
-          id: zMini.string().check(zMini.minLength(3), zMini.meta({ examples: ['1212121'] })),
-        }),
-      ),
-    }),
-    createResponseSchemas: () => {
-      const Price = zMini.object({ amount: zMini.number() }).check(zMini.meta({ $id: 'Price' }));
-      const Card = zMini.object({ id: zMini.string(), price: Price }).check(zMini.meta({ $id: 'Card' }));
-      const ErrorResponse = zMini
-        .object({ code: zMini.string(), message: zMini.string() })
-        .check(zMini.meta({ $id: 'ErrorResponse' }));
-
-      return { card: zMini.toJSONSchema(Card), error: zMini.toJSONSchema(ErrorResponse) };
-    },
-    createNullableField: () => ({
-      schema: zMini.toJSONSchema(zMini.object({ name: zMini.nullable(zMini.string()) })),
-    }),
-    supportsComponents: true,
-    supportsOpenapi30Target: true,
-  },
-  {
-    name: 'Valibot',
-    createCard: () => {
-      const Card = v.object({ id: v.string(), name: v.string() });
-
-      return { libraryOptions: { definitions: { Card } }, schema: toStandardJsonSchema(Card) };
-    },
-    createCardWithExample: () => {
-      const Card = v.object({ id: v.string(), name: v.pipe(v.string(), v.examples(['Luffy'])) });
-
-      return {
-        expectedNameSchema: { examples: ['Luffy'], type: 'string' },
-        libraryOptions: { definitions: { Card } },
-        schema: toStandardJsonSchema(Card),
-      };
-    },
-    createCardWithPrice: () => {
-      const Price = v.object({ amount: v.number() });
-      const Card = v.object({ id: v.string(), price: Price });
-
-      return {
-        libraryOptions: { definitions: { Card, Price } },
-        schema: toStandardJsonSchema(Card),
-      };
-    },
-    createParamsWithExample: () => ({
-      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
-      schema: toStandardJsonSchema(v.object({ id: v.pipe(v.string(), v.minLength(3), v.examples(['1212121'])) })),
-    }),
-    createResponseSchemas: () => {
-      const Price = v.object({ amount: v.number() });
-      const Card = v.object({ id: v.string(), price: Price });
-      const ErrorResponse = v.object({ code: v.string(), message: v.string() });
-
-      return {
-        card: toStandardJsonSchema(Card),
-        error: toStandardJsonSchema(ErrorResponse),
-        libraryOptions: { definitions: { Card, ErrorResponse, Price } },
-      };
-    },
-    createNullableField: () => ({ schema: toStandardJsonSchema(v.object({ name: v.nullable(v.string()) })) }),
-    supportsComponents: true,
-    supportsOpenapi30Target: true,
-  },
-  {
-    name: 'Sury',
-    createCard: () => ({ schema: S.schema({ id: S.string, name: S.string }) }),
-    createCardWithExample: () => ({
-      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
-      schema: S.schema({ id: S.string, name: S.string.with(S.meta, { examples: ['Luffy'] }) }),
-    }),
-    createCardWithPrice: () => ({
-      schema: S.schema({ id: S.string, price: S.schema({ amount: S.number }) }),
-    }),
-    createParamsWithExample: () => ({
-      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
-      schema: S.schema({
-        id: S.string.with(S.minLength, 3).with(S.meta, { examples: ['1212121'] }),
-      }),
-    }),
-    createNullableField: () => ({ schema: S.schema({ name: S.nullable(S.string) }) }),
-    createResponseSchemas: () => ({
-      card: S.schema({ id: S.string, price: S.schema({ amount: S.number }) }),
-      error: S.schema({ code: S.string, message: S.string }),
-    }),
-    supportsComponents: false,
-    supportsOpenapi30Target: true,
-  },
-];
 
 function jsonResponseRoute(schema: SchemaOrReference, path = '/things'): RouteConfigBase {
   return {
@@ -274,13 +38,13 @@ describe.each(schemaLibraries)('$name', library => {
     expect(await Card['~standard'].validate({ id: 'card-1' })).toHaveProperty('issues');
   });
 
-  it.skipIf(!library.supportsComponents)('shares a named root schema across routes', () => {
+  it.skipIf(!library.supportsComponents)('shares a named root schema across routes', async () => {
     const { libraryOptions, schema: Card } = library.createCard();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(Card, '/a'));
-    registry.registerPath(jsonResponseRoute(Card, '/b'));
-
-    const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
+    const document = await generateDocument(
+      [jsonResponseRoute(Card, '/a'), jsonResponseRoute(Card, '/b')],
+      DOC_CONFIG,
+      { libraryOptions },
+    );
 
     expect(document.paths?.['/a']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
       $ref: '#/components/schemas/Card',
@@ -295,20 +59,16 @@ describe.each(schemaLibraries)('$name', library => {
     });
   });
 
-  it.skipIf(!library.supportsComponents)('preserves schema examples from the library converter', () => {
+  it.skipIf(!library.supportsComponents)('preserves schema examples from the library converter', async () => {
     const { expectedNameSchema, libraryOptions, schema: Card } = library.createCardWithExample();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(Card));
-    const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
+    const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
 
     expect(document.components?.schemas?.Card?.properties?.name).toEqual(expectedNameSchema);
   });
 
-  it.skipIf(library.supportsComponents)('keeps schema examples inline instead of naming a component', () => {
+  it.skipIf(library.supportsComponents)('keeps schema examples inline instead of naming a component', async () => {
     const { expectedNameSchema, libraryOptions, schema: Card } = library.createCardWithExample();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(Card));
-    const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
+    const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
 
     expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema.properties.name).toEqual(
       expectedNameSchema,
@@ -316,7 +76,7 @@ describe.each(schemaLibraries)('$name', library => {
     expect(document.components?.schemas?.Card).toBeUndefined();
   });
 
-  it('uses schema examples on inferred path parameters', () => {
+  it('uses schema examples on inferred path parameters', async () => {
     const { expectedNameSchema, schema } = library.createParamsWithExample();
     const route: RouteConfigBase = {
       method: 'get',
@@ -324,22 +84,17 @@ describe.each(schemaLibraries)('$name', library => {
       request: { params: schema },
       responses: { 200: { description: 'ok' } },
     };
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(route);
 
-    const document: Document = new OpenAPIGenerator(registry).generateDocument(DOC_CONFIG);
+    const document = await generateDocument([route], DOC_CONFIG);
 
     expect(document.paths?.['/cards/{id}']?.get?.parameters).toEqual([
       { in: 'path', name: 'id', required: true, schema: expectedNameSchema },
     ]);
   });
 
-  it.skipIf(library.supportsComponents)('emits unnamed schemas inline', () => {
+  it.skipIf(library.supportsComponents)('emits unnamed schemas inline', async () => {
     const { schema: Card } = library.createCard();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(Card));
-
-    const document: Document = new OpenAPIGenerator(registry).generateDocument(DOC_CONFIG);
+    const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG);
 
     expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
       properties: { id: { type: 'string' }, name: { type: 'string' } },
@@ -348,12 +103,9 @@ describe.each(schemaLibraries)('$name', library => {
     });
   });
 
-  it.skipIf(!library.supportsComponents)('shares a nested schema through an OpenAPI component reference', () => {
+  it.skipIf(!library.supportsComponents)('shares a nested schema through an OpenAPI component reference', async () => {
     const { libraryOptions, schema: Card } = library.createCardWithPrice();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(Card));
-
-    const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
+    const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
 
     expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
       $ref: '#/components/schemas/Card',
@@ -362,12 +114,9 @@ describe.each(schemaLibraries)('$name', library => {
     expect(document.components?.schemas?.Price).toEqual(EXPECTED_PRICE_COMPONENT);
   });
 
-  it.skipIf(library.supportsComponents)('keeps a nested schema inline instead of referencing a component', () => {
+  it.skipIf(library.supportsComponents)('keeps a nested schema inline instead of referencing a component', async () => {
     const { libraryOptions, schema: Card } = library.createCardWithPrice();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(Card));
-
-    const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
+    const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
     const schema = document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema;
 
     expect(schema.$ref).toBeUndefined();
@@ -375,23 +124,26 @@ describe.each(schemaLibraries)('$name', library => {
     expect(document.components?.schemas).toEqual({});
   });
 
-  it.skipIf(!library.supportsComponents)('documents successful and error responses as components', () => {
+  it.skipIf(!library.supportsComponents)('documents successful and error responses as components', async () => {
     const { card, error, libraryOptions } = library.createResponseSchemas();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath({
-      method: 'get',
-      path: '/cards/{cardId}',
-      responses: {
-        200: {
-          content: { [JSON_TYPE]: { example: { id: 'card-1', name: 'Luffy' }, schema: card } },
-          description: 'A card',
+    const document = await generateDocument(
+      [
+        {
+          method: 'get',
+          path: '/cards/{cardId}',
+          responses: {
+            200: {
+              content: { [JSON_TYPE]: { example: { id: 'card-1', name: 'Luffy' }, schema: card } },
+              description: 'A card',
+            },
+            400: { content: { [JSON_TYPE]: { schema: error } }, description: 'Invalid request' },
+            404: { content: { [JSON_TYPE]: { schema: error } }, description: 'Card not found' },
+          },
         },
-        400: { content: { [JSON_TYPE]: { schema: error } }, description: 'Invalid request' },
-        404: { content: { [JSON_TYPE]: { schema: error } }, description: 'Card not found' },
-      },
-    });
-
-    const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
+      ],
+      DOC_CONFIG,
+      { libraryOptions },
+    );
 
     expect(document.paths?.['/cards/{cardId}']?.get.responses).toEqual({
       200: {
@@ -417,23 +169,26 @@ describe.each(schemaLibraries)('$name', library => {
 
   it.skipIf(library.supportsComponents)(
     'keeps successful and error responses inline instead of referencing components',
-    () => {
+    async () => {
       const { card, error, libraryOptions } = library.createResponseSchemas();
-      const registry = new OpenAPIRegistry();
-      registry.registerPath({
-        method: 'get',
-        path: '/cards/{cardId}',
-        responses: {
-          200: {
-            content: { [JSON_TYPE]: { example: { id: 'card-1', name: 'Luffy' }, schema: card } },
-            description: 'A card',
+      const document = await generateDocument(
+        [
+          {
+            method: 'get',
+            path: '/cards/{cardId}',
+            responses: {
+              200: {
+                content: { [JSON_TYPE]: { example: { id: 'card-1', name: 'Luffy' }, schema: card } },
+                description: 'A card',
+              },
+              400: { content: { [JSON_TYPE]: { schema: error } }, description: 'Invalid request' },
+              404: { content: { [JSON_TYPE]: { schema: error } }, description: 'Card not found' },
+            },
           },
-          400: { content: { [JSON_TYPE]: { schema: error } }, description: 'Invalid request' },
-          404: { content: { [JSON_TYPE]: { schema: error } }, description: 'Card not found' },
-        },
-      });
-
-      const document: Document = new OpenAPIGenerator(registry, { libraryOptions }).generateDocument(DOC_CONFIG);
+        ],
+        DOC_CONFIG,
+        { libraryOptions },
+      );
       const responses = document.paths?.['/cards/{cardId}']?.get.responses;
 
       expect(responses['200'].content[JSON_TYPE].schema.$ref).toBeUndefined();
@@ -443,23 +198,22 @@ describe.each(schemaLibraries)('$name', library => {
     },
   );
 
-  it.skipIf(!library.supportsOpenapi30Target)('renders a nullable field as OpenAPI 3.0 expects', () => {
+  it.skipIf(!library.supportsOpenapi30Target)('renders a nullable field as OpenAPI 3.0 expects', async () => {
     const { schema } = library.createNullableField();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(schema));
-
-    const document: Document = new OpenAPIGenerator(registry, { version: '3.0' }).generateDocument(DOC_CONFIG_3_0);
+    const document = await generateDocument([jsonResponseRoute(schema)], DOC_CONFIG_3_0, { version: '3.0' });
 
     expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema.properties.name).toMatchObject({
       nullable: true,
     });
   });
 
-  it.skipIf(library.supportsOpenapi30Target)('throws converting to the OpenAPI 3.0 JSON Schema target', () => {
-    const { schema } = library.createNullableField();
-    const registry = new OpenAPIRegistry();
-    registry.registerPath(jsonResponseRoute(schema));
+  it.skipIf(library.supportsOpenapi30Target)(
+    'answers the document route with a server error converting to the OpenAPI 3.0 JSON Schema target',
+    async () => {
+      const { schema } = library.createNullableField();
+      const response = await fetchDocument([jsonResponseRoute(schema)], DOC_CONFIG_3_0, { version: '3.0' });
 
-    expect(() => new OpenAPIGenerator(registry, { version: '3.0' }).generateDocument(DOC_CONFIG_3_0)).toThrow();
-  });
+      expect(response.status).toBe(500);
+    },
+  );
 });
