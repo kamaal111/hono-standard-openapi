@@ -194,6 +194,45 @@ const schemaLibraryRecord: LibraryRecord<SchemaLibrary | null> = {
     supportsComponents: true,
     supportsOpenapi30Target: true,
   },
+  'Zod Compiled': {
+    createCard: () => ({ schema: z.compile(z.object({ id: z.string(), name: z.string() }).meta({ $id: 'Card' })) }),
+    createCardWithExample: () => ({
+      expectedNameSchema: { examples: ['Luffy'], type: 'string' },
+      schema: z.compile(
+        z.object({ id: z.string(), name: z.string().meta({ examples: ['Luffy'] }) }).meta({ $id: 'Card' }),
+      ),
+    }),
+    createCardWithPrice: () => {
+      const Price = z.object({ amount: z.number() }).meta({ $id: 'Price' });
+
+      return { schema: z.compile(z.object({ id: z.string(), price: Price }).meta({ $id: 'Card' })) };
+    },
+    createUnnamedCardWithPrice: () => ({
+      schema: z.compile(z.object({ id: z.string(), price: z.object({ amount: z.number() }) })),
+    }),
+    createParamsWithExample: () => ({
+      expectedNameSchema: { examples: ['1212121'], minLength: 3, type: 'string' },
+      schema: z.compile(
+        z.object({
+          id: z
+            .string()
+            .min(3)
+            .meta({ examples: ['1212121'] }),
+        }),
+      ),
+    }),
+    createNullableField: () => ({ schema: z.compile(z.object({ name: z.string().nullable() })) }),
+    createResponseSchemas: () => {
+      const Price = z.object({ amount: z.number() }).meta({ $id: 'Price' });
+
+      return {
+        card: z.compile(z.object({ id: z.string(), price: Price }).meta({ $id: 'Card' })),
+        error: z.compile(z.object({ code: z.string(), message: z.string() }).meta({ $id: 'ErrorResponse' })),
+      };
+    },
+    supportsComponents: true,
+    supportsOpenapi30Target: true,
+  },
   'Zod Mini': {
     createCard: () => ({
       schema: zMini.toJSONSchema(

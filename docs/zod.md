@@ -47,6 +47,32 @@ const route = createRoute({
 OpenAPI components. Wrap each Mini schema passed to `request` or `responses`; the rest of this guide
 uses full Zod's instance API.
 
+## Compiled schemas
+
+[`z.compile()`](https://zod.dev/blog/introducing-z-compile) (Zod 4.5+) generates an optimized
+validator for a schema. A compiled schema is a Zod schema like any other — same `.meta()`, same
+`~standard` contract, same OpenAPI output — so it drops into a route wherever an uncompiled schema
+would go:
+
+```ts
+import { createRoute } from '@kamaalio/hono-standard-openapi';
+import { z } from 'zod';
+
+const Card = z.compile(z.object({ id: z.string(), name: z.string() }).meta({ $id: 'Card' }));
+
+const route = createRoute({
+  method: 'get',
+  path: '/cards/{cardId}',
+  responses: {
+    200: { content: { 'application/json': { schema: Card } }, description: 'A card' },
+  },
+});
+```
+
+`$id`, components, nested schemas, transforms, and `openapi-3.0` targets all behave the same as an
+uncompiled schema. Compiling only changes how the schema validates at runtime — it does not change
+the generated document.
+
 ## Define schemas and a route
 
 Use Zod's normal `.meta()` API. Give every schema you want to share one `$id`. It works whether the
