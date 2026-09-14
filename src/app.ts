@@ -51,6 +51,7 @@ export class StandardOpenAPIHono<
   /** Registers a route: mounts it, validates its request, and records it in the document. */
   openapi<R extends RouteConfig<E>>(route: R, handler: RouteHandler<R, E>, hook?: Hook<unknown, E, string>): this {
     const { hide, middleware, ...documented } = route;
+
     if (hide !== true) {
       this.openAPIRegistry.registerPath(documented);
     }
@@ -60,14 +61,18 @@ export class StandardOpenAPIHono<
 
       return resolved?.(result, c);
     };
+
     const methods = [route.method];
     const paths = [toRoutingPath(route.path)];
+
     for (const middlewareHandler of normalizeMiddleware<E>(middleware)) {
       this.on(methods, paths, middlewareHandler);
     }
+
     for (const validator of this.#buildValidators(route.request, effectiveHook)) {
       this.on(methods, paths, validator);
     }
+
     this.on(methods, paths, handler);
 
     return this;
@@ -106,11 +111,13 @@ export class StandardOpenAPIHono<
     if (this.defaultHook != null) {
       return this.defaultHook;
     }
+
     if (visited.has(this)) {
       return undefined;
     }
 
     visited.add(this);
+
     return this.#parentApp?.getDefaultHook(visited);
   }
 
@@ -120,8 +127,10 @@ export class StandardOpenAPIHono<
     }
 
     const validators: Handler<E, string>[] = [];
+
     for (const { key, target } of VALIDATED_PARTS) {
       const schema = request[key];
+
       if (schema == null) {
         continue;
       }
@@ -130,6 +139,7 @@ export class StandardOpenAPIHono<
     }
 
     const body = request.body;
+
     if (body != null) {
       validators.push(...buildBodyValidators(body.content, body.required === true, hook));
     }
@@ -154,6 +164,7 @@ function buildBodyValidators<E extends Env>(
 
   for (const [mediaType, media] of Object.entries(content)) {
     const schema = media.schema;
+
     if (!isStandardJSONSchema(schema)) {
       continue;
     }
@@ -163,6 +174,7 @@ function buildBodyValidators<E extends Env>(
       : FORM_CONTENT_TYPES.some(formType => mediaType.startsWith(formType))
         ? 'form'
         : undefined;
+
     if (target == null) {
       continue;
     }
@@ -187,6 +199,7 @@ function skipWhenBodyAbsent<E extends Env>(
 ): Handler<E, string> {
   return async (c, next) => {
     const contentType = c.req.header('content-type');
+
     if (contentType != null && contentType.startsWith(mediaType.replace(/;.*/, ''))) {
       return validator(c, next);
     }
@@ -209,6 +222,7 @@ function normalizeMiddleware<E extends Env>(middleware: RouteConfig<E>['middlewa
   if (middleware == null) {
     return [];
   }
+
   if (isMiddlewareHandler(middleware)) {
     return [middleware];
   }

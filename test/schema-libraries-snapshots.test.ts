@@ -9,6 +9,7 @@ const DOC_CONFIG = {
   openapi: '3.1.1',
   servers: [{ url: 'https://api.example.com' }],
 };
+
 const JSON_TYPE = 'application/json';
 
 function cardRoute(schema: SchemaOrReference): RouteConfigBase {

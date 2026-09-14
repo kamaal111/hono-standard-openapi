@@ -234,6 +234,7 @@ const schemaLibraryRecord: LibraryRecord<SchemaLibrary | null> = {
     createResponseSchemas: () => {
       const Price = zMini.object({ amount: zMini.number() }).check(zMini.meta({ $id: 'Price' }));
       const Card = zMini.object({ id: zMini.string(), price: Price }).check(zMini.meta({ $id: 'Card' }));
+
       const ErrorResponse = zMini
         .object({ code: zMini.string(), message: zMini.string() })
         .check(zMini.meta({ $id: 'ErrorResponse' }));

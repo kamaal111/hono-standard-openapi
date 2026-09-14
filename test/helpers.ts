@@ -32,9 +32,11 @@ export async function fetchDocument(
   generatorConfig?: GeneratorOptions,
 ): Promise<Response> {
   const app = new StandardOpenAPIHono();
+
   for (const route of routes) {
     app.openapi(route, c => c.json({}));
   }
+
   app.doc(DOC_PATH, config, generatorConfig);
 
   return app.request(DOC_PATH);

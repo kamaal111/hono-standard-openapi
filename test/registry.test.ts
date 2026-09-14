@@ -25,10 +25,12 @@ describe('OpenAPIRegistry', () => {
 
   it('registers webhooks and reusable components', () => {
     const registry = new OpenAPIRegistry();
+
     const component = registry.registerComponent('securitySchemes', 'bearerAuth', {
       scheme: 'bearer',
       type: 'http',
     });
+
     registry.registerWebhook({ method: 'post', path: '/events', responses: { 204: { description: 'ok' } } });
 
     expect(component).toEqual({

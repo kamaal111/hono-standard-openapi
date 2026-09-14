@@ -46,26 +46,26 @@
     "openapi3-ts": "^4.6.1"
   },
   "devDependencies": {
-    "@kamaal111/oxlint-plugin-anti-slop": "^0.0.3",
-    "@oxlint/plugins": "^1.80.0",
+    "@kamaal111/oxlint-plugin-anti-slop": "^0.0.4",
+    "@oxlint/plugins": "^1.82.0",
     "@standard-schema/spec": "^1.1.0",
-    "@types/node": "^26.4.0",
-    "@valibot/to-json-schema": "^1.7.1",
+    "@types/node": "^26.5.1",
+    "@valibot/to-json-schema": "^1.8.0",
     "@vinejs/vine": "^4.4.0",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.0",
     "arktype": "^2.2.3",
     "eslint-plugin-import": "^2.32.0",
-    "hono": "^4.13.5",
+    "hono": "^4.13.7",
     "husky": "^9.1.7",
-    "lint-staged": "^17.4.1",
-    "oxfmt": "^0.65.0",
-    "oxlint": "^1.80.0",
+    "lint-staged": "^17.5.1",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
     "oxlint-tsgolint": "^7.0.2001",
-    "sury": "11.0.0-rc.2",
+    "sury": "^11.0.0",
     "typescript": "^7.0.2",
-    "valibot": "^1.4.2",
-    "vitest": "^4.1.11",
-    "zod": "^4.5.4"
+    "valibot": "^1.5.0",
+    "vitest": "^5.0.0",
+    "zod": "^4.6.4"
   },
   "peerDependencies": {
     "hono": ">=4.10.0"
@@ -77,7 +77,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^11.6.0",
+      "version": "^12.4.1",
       "onFail": "download"
     }
   }
