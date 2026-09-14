@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { standardSchema } from './helpers.ts';
-import { createRoute, toRoutingPath } from '../src/route.ts';
+import { createRoute, defineOpenAPIRoute, toRoutingPath } from '../src/route.ts';
 import { isStandardJSONSchema, isStandardSchema, validateWithStandardSchema } from '../src/standard-schema.ts';
 
 describe('route utilities', () => {
@@ -11,6 +11,19 @@ describe('route utilities', () => {
     expect(route.getRoutingPath()).toBe('/cards/:cardId');
     expect(Object.keys(route)).not.toContain('getRoutingPath');
     expect(toRoutingPath('/sets/{setId}/cards/{cardId}')).toBe('/sets/:setId/cards/:cardId');
+  });
+
+  it('returns a reusable route definition unchanged', () => {
+    const route = createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'ok' } } });
+    const handler = () => new Response('ok');
+    const hook = () => undefined;
+
+    const definition = defineOpenAPIRoute({ route, handler, hook });
+
+    expect(definition).toEqual({ route, handler, hook });
+    expect(definition.route).toBe(route);
+    expect(definition.handler).toBe(handler);
+    expect(definition.hook).toBe(hook);
   });
 });
 

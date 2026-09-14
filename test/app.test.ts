@@ -14,7 +14,7 @@ import { standardSchema } from './helpers.ts';
 import { type LibraryRecord, listLibraries } from './library-names.ts';
 import { $, StandardOpenAPIHono } from '../src/app.ts';
 import type { JsonObject } from '../src/json-value.ts';
-import { createRoute } from '../src/route.ts';
+import { createRoute, defineOpenAPIRoute } from '../src/route.ts';
 import type { StandardSchema } from '../src/standard-schema.ts';
 
 const JSON_TYPE = 'application/json';
@@ -126,6 +126,27 @@ function createCardRoute(library: SchemaLibrary) {
 
 describe.each(schemaLibraries)('$name routing', library => {
   const cardRoute = createCardRoute(library);
+
+  it('registers reusable route definitions', async () => {
+    const cardDefinition = defineOpenAPIRoute({
+      route: cardRoute,
+      handler: c => c.json({ id: '550e8400-e29b-41d4-a716-446655440000' }),
+    });
+
+    const healthDefinition = defineOpenAPIRoute({
+      route: createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'ok' } } }),
+      handler: c => c.json({ status: 'ok' }),
+    });
+
+    const app = new StandardOpenAPIHono();
+    app.openapiRoutes([cardDefinition, healthDefinition]);
+
+    const response = await app.request('/cards/550e8400-e29b-41d4-a716-446655440000');
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ id: '550e8400-e29b-41d4-a716-446655440000' });
+    await expect((await app.request('/health')).json()).resolves.toEqual({ status: 'ok' });
+  });
 
   it('serves an OpenAPI path as a Hono path', async () => {
     const app = new StandardOpenAPIHono();
