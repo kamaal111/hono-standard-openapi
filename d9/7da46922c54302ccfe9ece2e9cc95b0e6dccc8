@@ -1,0 +1,21 @@
+vitest.config.ts
+  s_fcbf1695330a45::t_118d30fa02f380 5
+tsconfig.json
+  s_fcbf1695330a45::t_e47b155b784b52 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d97da46922c54302ccfe9ece2e9cc95b0e6dccc8",
+  "prompts": {},
+  "sessions": {
+    "s_fcbf1695330a45": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a84dafe-8020-4242-93fa-0974a464d2b6",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
