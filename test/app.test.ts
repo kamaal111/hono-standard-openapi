@@ -91,6 +91,15 @@ const schemaLibraryRecord: LibraryRecord<SchemaLibrary> = {
     createUppercaseTokenHeaderSchema: () => z.object({ 'X-Token': z.string() }),
     createUUIDParamsSchema: () => z.object({ cardId: z.uuid() }),
   },
+  'Zod Compiled': {
+    createCardResponse: () => z.compile(z.object({ id: z.string() })),
+    createCookieSchema: () => z.compile(z.object({ session: z.string() })),
+    createNameSchema: () => z.compile(z.object({ name: z.string() })),
+    createStringSchema: () => z.compile(z.string()),
+    createTokenHeaderSchema: () => z.compile(z.object({ 'x-token': z.string() })),
+    createUppercaseTokenHeaderSchema: () => z.compile(z.object({ 'X-Token': z.string() })),
+    createUUIDParamsSchema: () => z.compile(z.object({ cardId: z.uuid() })),
+  },
   'Zod Mini': {
     createCardResponse: () => zMini.toJSONSchema(zMini.object({ id: zMini.string() })),
     createCookieSchema: () => zMini.toJSONSchema(zMini.object({ session: zMini.string() })),

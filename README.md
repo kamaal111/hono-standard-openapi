@@ -35,14 +35,15 @@ pnpm add zod
 
 The libraries below are supported for request validation and OpenAPI generation.
 
-| Library                            | Request validation | OpenAPI schemas | Named components                | `openapi-3.0` documents | Responses show transforms              |
-| ---------------------------------- | ------------------ | --------------- | ------------------------------- | ----------------------- | -------------------------------------- |
-| [ArkType](./docs/arktype.md)       | ✅                 | ✅              | ✅                              | ❌ — throws             | ✅                                     |
-| [Zod](./docs/zod.md)               | ✅                 | ✅              | ✅                              | ✅                      | ✅                                     |
-| [Zod Mini](./docs/zod.md#zod-mini) | ✅                 | ✅              | ✅                              | ✅                      | ✅                                     |
-| [Valibot](./docs/valibot.md)       | ✅                 | ✅              | ✅                              | ✅                      | ❌ — shows the value before validation |
-| [Sury](./docs/sury.md)             | ✅                 | ✅              | ❌ — schemas are emitted inline | ✅                      | ❌ — shows the value before validation |
-| [VineJS](./docs/vinejs.md)         | ✅                 | ✅              | ❌ — schemas are emitted inline | ✅                      | ❌ — shows the value before validation |
+| Library                                          | Request validation | OpenAPI schemas | Named components                | `openapi-3.0` documents | Responses show transforms              |
+| ------------------------------------------------ | ------------------ | --------------- | ------------------------------- | ----------------------- | -------------------------------------- |
+| [ArkType](./docs/arktype.md)                     | ✅                 | ✅              | ✅                              | ❌ — throws             | ✅                                     |
+| [Zod](./docs/zod.md)                             | ✅                 | ✅              | ✅                              | ✅                      | ✅                                     |
+| [Zod Mini](./docs/zod.md#zod-mini)               | ✅                 | ✅              | ✅                              | ✅                      | ✅                                     |
+| [Zod (compiled)](./docs/zod.md#compiled-schemas) | ✅                 | ✅              | ✅                              | ✅                      | ✅                                     |
+| [Valibot](./docs/valibot.md)                     | ✅                 | ✅              | ✅                              | ✅                      | ❌ — shows the value before validation |
+| [Sury](./docs/sury.md)                           | ✅                 | ✅              | ❌ — schemas are emitted inline | ✅                      | ❌ — shows the value before validation |
+| [VineJS](./docs/vinejs.md)                       | ✅                 | ✅              | ❌ — schemas are emitted inline | ✅                      | ❌ — shows the value before validation |
 
 `openapi-3.0` documents: can the library generate a `version: '3.0'` document, or only the default
 `version: '3.1'`?
