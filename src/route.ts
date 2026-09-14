@@ -39,7 +39,7 @@ export function defineOpenAPIRoute<E extends Env = Env, R extends RouteConfig<E>
  */
 export function createRoute<P extends string, R extends Omit<RouteConfig, 'path'> & { path: P }>(
   routeConfig: R,
-): R & { getRoutingPath(): ConvertPathType<P> } {
+): R & { getRoutingPath(): ConvertPathType<R['path']> } {
   const routingPath = toRoutingPath(routeConfig.path);
   const route = { ...routeConfig, getRoutingPath: () => routingPath };
 

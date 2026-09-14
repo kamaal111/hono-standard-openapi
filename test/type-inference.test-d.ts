@@ -4,6 +4,29 @@ import { z } from 'zod';
 
 import { createRoute, StandardOpenAPIHono } from '../src/index.ts';
 import type { RouteConfigToTypedResponse } from '../src/index.ts';
+import type { ComputeInput, ConvertPathType } from '../src/type-inference.ts';
+
+describe('ConvertPathType', () => {
+  it('leaves a path with no params unchanged', () => {
+    expectTypeOf<ConvertPathType<'/health'>>().toEqualTypeOf<'/health'>();
+  });
+
+  it('rewrites a single param', () => {
+    expectTypeOf<ConvertPathType<'/users/{id}'>>().toEqualTypeOf<'/users/:id'>();
+  });
+
+  it('rewrites two consecutive params', () => {
+    expectTypeOf<ConvertPathType<'/{a}/{b}'>>().toEqualTypeOf<'/:a/:b'>();
+  });
+
+  it('keeps a static segment that follows a param', () => {
+    expectTypeOf<ConvertPathType<'/cards/{cardId}/prices'>>().toEqualTypeOf<'/cards/:cardId/prices'>();
+  });
+
+  it('rewrites a param whose name has punctuation', () => {
+    expectTypeOf<ConvertPathType<'/{user-id}/{file.ext}'>>().toEqualTypeOf<'/:user-id/:file.ext'>();
+  });
+});
 
 describe('status code keys', () => {
   const quoted = createRoute({
@@ -133,6 +156,37 @@ describe('request parts', () => {
       return c.body(null, 200);
     });
   });
+
+  it('keeps query, params and a json body independent when all three are documented', () => {
+    const everything = createRoute({
+      method: 'post',
+      path: '/cards/{cardId}',
+      request: {
+        body: { content: { 'application/json': { schema: z.object({ name: z.string() }) } }, required: true },
+        params: z.object({ cardId: z.string() }),
+        query: z.object({ expand: z.boolean() }),
+      },
+      responses: { 200: { description: 'ok' } },
+    });
+
+    new StandardOpenAPIHono().openapi(everything, c => {
+      expectTypeOf(c.req.valid('param')).toEqualTypeOf<{ cardId: string }>();
+      expectTypeOf(c.req.valid('query')).toEqualTypeOf<{ expand: boolean }>();
+      expectTypeOf(c.req.valid('json')).toEqualTypeOf<{ name: string }>();
+
+      return c.body(null, 200);
+    });
+  });
+
+  it('computes an empty input for a route with no request at all', () => {
+    const noRequest = createRoute({
+      method: 'get',
+      path: '/health',
+      responses: { 200: { description: 'ok' } },
+    });
+
+    expectTypeOf<ComputeInput<typeof noRequest>>().toEqualTypeOf<{}>();
+  });
 });
 
 describe('responses', () => {
@@ -163,5 +217,40 @@ describe('responses', () => {
 
       return c.body(null, 200);
     });
+  });
+
+  it('unions every documented status into the handler’s allowed responses', () => {
+    const multiStatus = createRoute({
+      method: 'get',
+      path: '/cards/{cardId}',
+      responses: {
+        200: { content: { 'application/json': { schema: z.object({ id: z.string() }) } }, description: 'ok' },
+        404: { description: 'not found' },
+      },
+    });
+
+    expectTypeOf<RouteConfigToTypedResponse<typeof multiStatus>>().toEqualTypeOf<
+      (Response & TypedResponse<{ id: string }, 200, 'json'>) | (Response & TypedResponse<unknown, 404, 'text'>)
+    >();
+
+    new StandardOpenAPIHono().openapi(multiStatus, c => {
+      if (c.req.param('cardId') === 'missing') {
+        return c.body(null, 404);
+      }
+
+      return c.json({ id: c.req.param('cardId') }, 200);
+    });
+  });
+
+  it('falls back to an unknown json body when the response schema can’t be resolved', () => {
+    const schemaless = createRoute({
+      method: 'get',
+      path: '/schemaless',
+      responses: { 200: { content: { 'application/json': {} }, description: 'ok' } },
+    });
+
+    expectTypeOf<RouteConfigToTypedResponse<typeof schemaless>>().toEqualTypeOf<
+      Response & TypedResponse<unknown, 200, 'json'>
+    >();
   });
 });
