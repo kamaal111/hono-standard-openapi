@@ -1,6 +1,6 @@
-export const LIBRARY_NAMES = ['ArkType', 'Zod', 'Zod Mini', 'Zod Compiled', 'Valibot', 'Sury', 'VineJS'] as const;
+const LIBRARY_NAMES = ['ArkType', 'Zod', 'Zod Mini', 'Zod Compiled', 'Valibot', 'Sury', 'VineJS'] as const;
 
-export type LibraryName = (typeof LIBRARY_NAMES)[number];
+type LibraryName = (typeof LIBRARY_NAMES)[number];
 
 export type LibraryRecord<T> = Record<LibraryName, T>;
 
