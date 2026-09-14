@@ -17,8 +17,11 @@ type RequestPart<R extends RouteConfigBase, Part extends string> = R extends { r
     : never
   : never;
 
-type InputTypeBase<R extends RouteConfigBase, Part extends string, Type extends keyof ValidationTargets> =
-  RequestPart<R, Part> extends infer Schema extends StandardSchemaV1
+type InputTypeBase<R extends RouteConfigBase, Part extends string, Type extends keyof ValidationTargets> = [
+  RequestPart<R, Part>,
+] extends [never]
+  ? {}
+  : RequestPart<R, Part> extends infer Schema extends StandardSchemaV1
     ? {
         in: {
           [K in Type]: HasUndefined<ValidationTargets[K]> extends true
@@ -47,8 +50,11 @@ type BodySchema<Content, MediaType> = MediaType extends keyof Content
     : never
   : never;
 
-type InputTypeBody<R extends RouteConfigBase, MediaType, Target extends 'json' | 'form'> =
-  BodySchema<RequestContent<R>, MediaType> extends infer Schema extends StandardSchemaV1
+type InputTypeBody<R extends RouteConfigBase, MediaType, Target extends 'json' | 'form'> = [
+  BodySchema<RequestContent<R>, MediaType>,
+] extends [never]
+  ? {}
+  : BodySchema<RequestContent<R>, MediaType> extends infer Schema extends StandardSchemaV1
     ? {
         in: { [K in Target]: StandardSchemaV1.InferInput<Schema> };
         out: { [K in Target]: StandardSchemaV1.InferOutput<Schema> };
@@ -90,7 +96,7 @@ type TypedResponseFor<ResponseEntry, Status extends StatusCode> = ResponseEntry 
         ? Response & TypedResponse<unknown, Status, 'json'>
         : Response & TypedResponse<Body, Status, 'json'>
       : never
-  : never;
+  : Response & TypedResponse<unknown, Status, 'text'>;
 
 /** The responses a handler is allowed to return, one per documented status code. */
 export type RouteConfigToTypedResponse<R extends RouteConfigBase> = {
