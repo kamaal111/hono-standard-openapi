@@ -1,0 +1,39 @@
+test/app.test.ts
+  s_c30b0f1e23e0ff::t_76a2487250b747 135
+  s_c30b0f1e23e0ff::t_961cae4d3937bb 17,130-134,136-143
+  s_8ab87672d6aa86::t_01a18ef287b751 144
+README.md
+  s_c30b0f1e23e0ff::t_d51b7b9deeef0c 113
+  s_c30b0f1e23e0ff::t_a637c9e73d6fa1 11,93-112
+src/route.ts
+  s_c30b0f1e23e0ff::t_a637c9e73d6fa1 1,4,14-31
+  s_c30b0f1e23e0ff::t_82cc6d1ba291c1 32
+src/index.ts
+  s_c30b0f1e23e0ff::t_71be5c56c426e7 5
+test/public-utilities.test.ts
+  s_c30b0f1e23e0ff::t_a637c9e73d6fa1 4,15-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "cebc419b5ef7bb0b07bb1b12cd9b49503939e5eb",
+  "prompts": {},
+  "sessions": {
+    "s_8ab87672d6aa86": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca25cf55-380a-4f04-9768-7eb9fc04eeac",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    },
+    "s_c30b0f1e23e0ff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0a145-f85e-7730-aefa-1e21544aadf3",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": null
+    }
+  }
+}
