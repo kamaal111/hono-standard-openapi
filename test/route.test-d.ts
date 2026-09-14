@@ -1,4 +1,3 @@
-import { describe, expectTypeOf, it } from 'vitest';
 import { z } from 'zod';
 
 import { createRoute, defineOpenAPIRoute } from '../src/route.ts';

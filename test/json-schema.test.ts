@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import { standardSchema } from './helpers.ts';
 import { UnsupportedSchemaError } from '../src/errors.ts';
 import { ComponentCollector, convertSchema } from '../src/json-schema.ts';

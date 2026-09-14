@@ -1,5 +1,4 @@
 import type { TypedResponse } from 'hono';
-import { describe, expectTypeOf, it } from 'vitest';
 import { z } from 'zod';
 
 import { createRoute, StandardOpenAPIHono } from '../src/index.ts';

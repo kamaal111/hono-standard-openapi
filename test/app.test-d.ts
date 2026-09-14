@@ -1,5 +1,4 @@
 import type { Hono } from 'hono';
-import { describe, expectTypeOf, it } from 'vitest';
 
 import type { HonoToStandardOpenAPIHono } from '../src/app.ts';
 import { $, StandardOpenAPIHono } from '../src/index.ts';

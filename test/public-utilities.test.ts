@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import { standardSchema } from './helpers.ts';
 import { createRoute, defineOpenAPIRoute, toRoutingPath } from '../src/route.ts';
 import { isStandardJSONSchema, isStandardSchema, validateWithStandardSchema } from '../src/standard-schema.ts';

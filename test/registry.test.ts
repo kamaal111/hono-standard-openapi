@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import { standardSchema } from './helpers.ts';
 import { OpenAPIRegistry } from '../src/registry.ts';
 
