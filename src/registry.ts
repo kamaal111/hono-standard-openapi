@@ -60,12 +60,14 @@ export class OpenAPIRegistry {
 
   nameOf(schema: StandardSchema): string | undefined {
     const own = this.#names.get(schema);
+
     if (own != null) {
       return own;
     }
 
     for (const parent of this.#parents) {
       const inherited = parent.nameOf(schema);
+
       if (inherited != null) {
         return inherited;
       }

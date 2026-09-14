@@ -5,15 +5,19 @@ import { schemaLibraries } from './schema-libraries.ts';
 import type { RouteConfigBase, SchemaOrReference } from '../src/types.ts';
 
 const DOC_CONFIG = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.1.1' };
+
 const DOC_CONFIG_3_0 = { info: { title: 'Test', version: '1.0.0' }, openapi: '3.0.3' };
+
 const JSON_TYPE = 'application/json';
 
 const EXPECTED_NESTED_PRICE = { $ref: '#/components/schemas/Price' };
+
 const EXPECTED_PRICE_COMPONENT = {
   properties: { amount: { type: 'number' } },
   required: ['amount'],
   type: 'object',
 };
+
 const EXPECTED_ERROR_RESPONSE_COMPONENT = {
   properties: { code: { type: 'string' }, message: { type: 'string' } },
   required: ['code', 'message'],
@@ -40,6 +44,7 @@ describe.each(schemaLibraries)('$name', library => {
 
   it.skipIf(!library.supportsComponents)('shares a named root schema across routes', async () => {
     const { libraryOptions, schema: Card } = library.createCard();
+
     const document = await generateDocument(
       [jsonResponseRoute(Card, '/a'), jsonResponseRoute(Card, '/b')],
       DOC_CONFIG,
@@ -78,6 +83,7 @@ describe.each(schemaLibraries)('$name', library => {
 
   it('uses schema examples on inferred path parameters', async () => {
     const { expectedNameSchema, schema } = library.createParamsWithExample();
+
     const route: RouteConfigBase = {
       method: 'get',
       path: '/cards/{id}',
@@ -126,6 +132,7 @@ describe.each(schemaLibraries)('$name', library => {
 
   it.skipIf(!library.supportsComponents)('documents successful and error responses as components', async () => {
     const { card, error, libraryOptions } = library.createResponseSchemas();
+
     const document = await generateDocument(
       [
         {
@@ -171,6 +178,7 @@ describe.each(schemaLibraries)('$name', library => {
     'keeps successful and error responses inline instead of referencing components',
     async () => {
       const { card, error, libraryOptions } = library.createResponseSchemas();
+
       const document = await generateDocument(
         [
           {
@@ -189,6 +197,7 @@ describe.each(schemaLibraries)('$name', library => {
         DOC_CONFIG,
         { libraryOptions },
       );
+
       const responses = document.paths?.['/cards/{cardId}']?.get.responses;
 
       expect(responses['200'].content[JSON_TYPE].schema.$ref).toBeUndefined();

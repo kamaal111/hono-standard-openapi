@@ -305,9 +305,11 @@ describe.each(schemaLibraries)('$name validation', library => {
   it('falls back to the hook of the app it is mounted under', async () => {
     const cards = new StandardOpenAPIHono();
     cards.openapi(createRoute({ ...cardRoute, path: '/{cardId}' }), c => c.json({ id: 'x' }));
+
     const root = new StandardOpenAPIHono({
       defaultHook: (result, c) => (result.success ? undefined : c.json({ from: 'parent' }, 418)),
     });
+
     root.route('/cards', cards);
 
     const response = await root.request('/cards/not-a-uuid');
@@ -320,10 +322,13 @@ describe.each(schemaLibraries)('$name validation', library => {
     const cards = new StandardOpenAPIHono({
       defaultHook: (result, c) => (result.success ? undefined : c.json({ from: 'own' }, 409)),
     });
+
     cards.openapi(createRoute({ ...cardRoute, path: '/{cardId}' }), c => c.json({ id: 'x' }));
+
     const root = new StandardOpenAPIHono({
       defaultHook: (result, c) => (result.success ? undefined : c.json({ from: 'parent' }, 418)),
     });
+
     root.route('/cards', cards);
 
     expect((await root.request('/cards/not-a-uuid')).status).toBe(409);
@@ -334,9 +339,11 @@ describe.each(schemaLibraries)('$name validation', library => {
     cards.openapi(createRoute({ ...cardRoute, path: '/{cardId}' }), c => c.json({ id: 'x' }));
     const middle = new StandardOpenAPIHono();
     middle.route('/cards', cards);
+
     const root = new StandardOpenAPIHono({
       defaultHook: (result, c) => (result.success ? undefined : c.json({ from: 'root' }, 417)),
     });
+
     root.route('/api', middle);
 
     expect((await root.request('/api/cards/not-a-uuid')).status).toBe(417);
@@ -353,12 +360,14 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('validates headers declared with lowercase schema keys', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'get',
       path: '/whoami',
       request: { headers: library.createTokenHeaderSchema() },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json({ token: c.req.header('x-token') }));
 
     const response = await app.request('/whoami', { headers: { 'X-Token': 'shouted' } });
@@ -368,12 +377,14 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('does not recase header names for schema properties', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'get',
       path: '/uppercase-header',
       request: { headers: library.createUppercaseTokenHeaderSchema() },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.text('ok'));
 
     expect((await app.request('/uppercase-header', { headers: { 'x-token': 'value' } })).status).toBe(400);
@@ -381,12 +392,14 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('lets a request through when an optional body is absent', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'post',
       path: '/things',
       request: { body: { content: { [JSON_TYPE]: { schema: library.createNameSchema() } } } },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json({ body: {} }));
 
     const response = await app.request('/things', { method: 'post' });
@@ -397,6 +410,7 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('validates a body that is sent', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'post',
       path: '/things',
@@ -405,6 +419,7 @@ describe.each(schemaLibraries)('$name validation', library => {
       },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json({ body: {} }));
 
     const response = await app.request('/things', {
@@ -418,6 +433,7 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('validates optional JSON bodies when their content type is present', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'post',
       path: '/things',
@@ -426,6 +442,7 @@ describe.each(schemaLibraries)('$name validation', library => {
       },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json({ body: { name: 'thing' } }));
 
     const response = await app.request('/things', {
@@ -439,6 +456,7 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('validates form bodies', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'post',
       path: '/forms',
@@ -447,6 +465,7 @@ describe.each(schemaLibraries)('$name validation', library => {
       },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json({ body: { name: 'thing' } }));
 
     const response = await app.request('/forms', {
@@ -459,6 +478,7 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('ignores bodies that cannot be validated or mapped to a Hono target', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'post',
       path: '/binary',
@@ -472,6 +492,7 @@ describe.each(schemaLibraries)('$name validation', library => {
       },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.text('ok'));
 
     await expect((await app.request('/binary', { body: 'raw', method: 'post' })).text()).resolves.toBe('ok');
@@ -479,6 +500,7 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('validates cookies and tolerates schemas whose properties cannot be inspected', async () => {
     const app = new StandardOpenAPIHono();
+
     const throwingSchema: StandardSchema = {
       '~standard': {
         jsonSchema: {
@@ -492,12 +514,14 @@ describe.each(schemaLibraries)('$name validation', library => {
         version: 1,
       },
     };
+
     const route = createRoute({
       method: 'get',
       path: '/session',
       request: { cookies: library.createCookieSchema(), headers: throwingSchema },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json({ session: c.req.header('cookie')?.replace('session=', '') }));
 
     const response = await app.request('/session', { headers: { cookie: 'session=abc' } });
@@ -507,12 +531,14 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('keeps header input unchanged when its schema has no object properties', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'get',
       path: '/headers',
       request: { headers: standardSchema({ input: { type: 'string' } }) },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json({ headers: c.req.valid('header') }));
 
     const response = await app.request('/headers', { headers: { 'x-token': 'value' } });
@@ -522,6 +548,7 @@ describe.each(schemaLibraries)('$name validation', library => {
 
   it('preserves header names that the schema does not declare', async () => {
     const app = new StandardOpenAPIHono();
+
     const route = createRoute({
       method: 'get',
       path: '/extra-header',
@@ -532,6 +559,7 @@ describe.each(schemaLibraries)('$name validation', library => {
       },
       responses: { 200: { description: 'ok' } },
     });
+
     app.openapi(route, c => c.json(c.req.valid('header')));
 
     const response = await app.request('/extra-header', { headers: { 'x-extra': 'value' } });

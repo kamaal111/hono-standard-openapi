@@ -142,6 +142,7 @@ export class OpenAPIGenerator {
     }
 
     const { components: configuredComponents, ...rest } = config;
+
     const document: OpenAPIObject = {
       ...rest,
       paths,
@@ -185,11 +186,13 @@ export class OpenAPIGenerator {
     const { method, parameters: declaredParameters, path: _path, request, responses, ...operationConfig } = route;
     const parameters = (declaredParameters ?? []).concat(this.#generateParameters(request));
     const operation: OperationToGenerate = { ...operationConfig, responses: this.#generateResponses(responses) };
+
     if (parameters.length > 0) {
       operation.parameters = parameters;
     }
 
     const requestBody = request?.body;
+
     if (requestBody != null) {
       const { content, ...bodyConfig } = requestBody;
       operation.requestBody = { ...bodyConfig, content: this.#generateContent(content, 'input') };
@@ -205,6 +208,7 @@ export class OpenAPIGenerator {
 
     return PARAMETER_SOURCES.flatMap(({ key, location }) => {
       const schema = request[key];
+
       if (schema == null) {
         return [];
       }
@@ -216,6 +220,7 @@ export class OpenAPIGenerator {
   #generateParametersFor(schema: StandardSchema, location: ParameterLocation): ParameterObject[] {
     const converted = this.#convert(schema, 'input', false);
     const properties = converted.properties;
+
     if (converted.type !== 'object' || !isObjectLike(properties)) {
       throw new UnsupportedParameterSchemaError(location);
     }
@@ -231,6 +236,7 @@ export class OpenAPIGenerator {
 
   #generateResponses(responses: RouteConfigBase['responses']) {
     const generated: RawDocumentObject = {};
+
     for (const [status, response] of Object.entries(responses)) {
       generated[status] = '$ref' in response ? response : this.#generateResponse(response);
     }
@@ -240,9 +246,11 @@ export class OpenAPIGenerator {
 
   #generateResponse(response: ResponseConfig): GeneratedResponse {
     const generated: GeneratedResponse = { description: response.description, links: response.links };
+
     if (response.headers != null) {
       generated.headers = this.#generateResponseHeaders(response.headers);
     }
+
     if (response.content != null) {
       generated.content = this.#generateContent(response.content, 'output');
     }
@@ -261,12 +269,14 @@ export class OpenAPIGenerator {
 
     const converted = this.#convert(headers, 'output', false);
     const properties = converted.properties;
+
     if (converted.type !== 'object' || !isObjectLike(properties)) {
       throw new UnsupportedParameterSchemaError('headers');
     }
 
     const required = Array.isArray(converted.required) ? converted.required : [];
     const generated: JsonObject = {};
+
     for (const [name, property] of Object.entries(properties)) {
       generated[name] = describeParameter(property, required.includes(name));
     }
@@ -278,6 +288,7 @@ export class OpenAPIGenerator {
   #describe(schema: SchemaOrReference, io: SchemaIO): OasSchema {
     if (isComposedSchema(schema)) {
       const composite = compositeOf(schema);
+
       if (composite.kind === 'allOf') {
         return { allOf: composite.schemas.map(member => this.#describe(member, io)) };
       }
@@ -288,9 +299,11 @@ export class OpenAPIGenerator {
 
       return { properties, required: Object.keys(composite.properties), type: 'object' };
     }
+
     if (isStandardJSONSchema(schema)) {
       return this.#convert(schema, io);
     }
+
     if (isStandardSchema(schema)) {
       throw new UnsupportedSchemaError(schema['~standard'].vendor);
     }
@@ -300,9 +313,11 @@ export class OpenAPIGenerator {
 
   #generateContent(content: ContentObject, io: SchemaIO) {
     const generated: ResponseContent = {};
+
     for (const [mediaType, media] of Object.entries(content)) {
       const { schema, ...rest } = media;
       const entry: ContentEntry = { ...rest };
+
       if (schema != null) {
         entry.schema = this.#describe(schema, io);
       }
@@ -322,6 +337,7 @@ export class OpenAPIGenerator {
  */
 function describeParameter(property: JsonValue, required: boolean) {
   const described: JsonObject = { schema: property, required };
+
   if (isObjectLike(property) && isJsonString(property.description)) {
     described.description = property.description;
   }
@@ -346,13 +362,16 @@ function orderSchemas(
   if (order === 'registration') {
     return schemas;
   }
+
   if (order === 'alphabetical') {
     return Object.fromEntries(Object.entries(schemas).sort(([left], [right]) => left.localeCompare(right)));
   }
 
   const ordered: Record<string, JSONSchema> = {};
+
   for (const name of referencedNames(paths, schemas)) {
     const schema = schemas[name];
+
     if (schema != null) {
       ordered[name] = schema;
     }
@@ -373,19 +392,23 @@ function referencedNames(paths: DocumentPaths, schemas: Record<string, JSONSchem
 
       return;
     }
+
     if (!isObjectLike(node)) {
       return;
     }
 
     const reference = node.$ref;
+
     if (isJsonString(reference)) {
       const name = reference.startsWith('#/components/schemas/') ? reference.slice(21) : undefined;
+
       if (name == null || seen.includes(name)) {
         return;
       }
 
       seen.push(name);
       const referenced = schemas[name];
+
       if (referenced !== undefined) {
         visit(referenced);
       }

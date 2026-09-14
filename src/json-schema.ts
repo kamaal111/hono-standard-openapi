@@ -107,6 +107,7 @@ export class ComponentCollector {
 
   get schemas() {
     const generated: Record<string, JSONSchema> = {};
+
     for (const [name, schema] of this.#schemas) {
       if (schema != null) {
         generated[name] = schema;
@@ -129,6 +130,7 @@ export class ComponentCollector {
 
   register(name: string, schema: JSONSchema): void {
     const existing = this.#schemas.get(name);
+
     if (existing != null) {
       if (!deepEquals(existing, schema)) {
         throw new ComponentNameConflictError(name);
@@ -171,6 +173,7 @@ export function convertSchema<T>(schema: T, options: ConvertOptions): JSONSchema
   }
 
   const raw = describe(schema, options.io, options.target, options.libraryOptions);
+
   const context: WalkContext = {
     components: options.components,
     normalization: { ...DEFAULT_NORMALIZATION, ...options.normalization },
@@ -228,11 +231,13 @@ function splitDefinitions(raw: JSONSchema) {
 
   for (const keyword of DEFINITIONS_KEYWORDS) {
     const block = root[keyword];
+
     if (!isObjectLike(block)) {
       continue;
     }
 
     delete root[keyword];
+
     for (const [key, value] of Object.entries(block)) {
       if (isObjectLike(value)) {
         definitions[key] = value;
@@ -278,6 +283,7 @@ function reserve(node: JSONSchema, context: WalkContext): void {
 function walk(node: JSONSchema, context: WalkContext): JSONSchema {
   const prepared = prepare(node, context);
   const name = prepared.$id;
+
   if (!isJsonString(name)) {
     return prepared;
   }
@@ -290,11 +296,13 @@ function walk(node: JSONSchema, context: WalkContext): JSONSchema {
 /** Rewrites references, descends into subschemas, then normalizes — but leaves `$id` in place. */
 function prepare(node: JSONSchema, context: WalkContext): JSONSchema {
   const reference = node.$ref;
+
   if (isJsonString(reference)) {
     return { ...node, $ref: context.pointers.get(reference) ?? reference };
   }
 
   const walked: JSONSchema = {};
+
   for (const [key, value] of Object.entries(node)) {
     walked[key] = DATA_KEYWORDS.has(key) ? value : walkChild(value, context);
   }
@@ -306,6 +314,7 @@ function walkChild(value: SchemaValue, context: WalkContext): SchemaValue {
   if (Array.isArray(value)) {
     return value.map(entry => walkChild(entry, context));
   }
+
   if (!isObjectLike(value)) {
     return value;
   }
@@ -327,6 +336,7 @@ function normalize(schema: JSONSchema, options: Required<NormalizationOptions>):
     if (options.dropStrictAdditionalProperties && key === 'additionalProperties' && value === false) {
       continue;
     }
+
     if (options.dropFormatImpliedPatterns && key === 'pattern' && isJsonString(collapsed.format)) {
       continue;
     }
@@ -345,11 +355,13 @@ function normalize(schema: JSONSchema, options: Required<NormalizationOptions>):
 /** Sorts a schema's keywords into `KEYWORD_ORDER`, leaving anything unrecognized at the end. */
 function orderKeywords(schema: JSONSchema): JSONSchema {
   const entries = Object.entries(schema);
+
   const ranked = entries.map((entry, index) => ({
     entry,
     index,
     rank: KEYWORD_RANK.get(entry[0]) ?? KEYWORD_ORDER.length,
   }));
+
   ranked.sort((left, right) => left.rank - right.rank || left.index - right.index);
 
   return Object.fromEntries(ranked.map(({ entry }) => entry));
@@ -361,19 +373,23 @@ function orderKeywords(schema: JSONSchema): JSONSchema {
  */
 function collapseNullableUnion(schema: JSONSchema): JSONSchema {
   const branches = schema.anyOf;
+
   if (!Array.isArray(branches) || branches.length !== 2) {
     return schema;
   }
 
   const nullBranchIndex = branches.findIndex(branch => isObjectLike(branch) && branch.type === 'null');
+
   if (nullBranchIndex === -1) {
     return schema;
   }
 
   const valueBranch = branches[nullBranchIndex === 0 ? 1 : 0];
+
   if (!isObjectLike(valueBranch) || !isJsonString(valueBranch.type)) {
     return schema;
   }
+
   if (Object.keys(valueBranch).some(key => key === '$ref' || key === '$id')) {
     return schema;
   }

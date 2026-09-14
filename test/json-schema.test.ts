@@ -80,6 +80,7 @@ describe('schema conversion edge cases', () => {
 
   it('rewrites both definition keywords and ignores non-schema definitions', () => {
     const components = new ComponentCollector();
+
     const converted = convertSchema(
       standardSchema({
         output: {
