@@ -1,0 +1,28 @@
+docs/zod.md
+  s_e875f84c50a3ba::t_392d83694c1aca 50-51,53-75
+  s_e875f84c50a3ba::t_1a01e2d4ad9823 52
+README.md
+  s_e875f84c50a3ba::t_172d00e073ad3d 38-46
+test/library-names.ts
+  s_e875f84c50a3ba::t_7c335903327c0d 1
+test/app.test.ts
+  s_e875f84c50a3ba::t_a6ef3fa510a7c8 94-102
+test/schema-libraries.ts
+  s_e875f84c50a3ba::t_0bf70bc3166286 197-235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3fd4d3702d7b8a8866c6ce679b9b3040223a55be",
+  "prompts": {},
+  "sessions": {
+    "s_e875f84c50a3ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1380a5fa-4acb-4c1e-8233-f9a5b2a9db6a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": null
+    }
+  }
+}
