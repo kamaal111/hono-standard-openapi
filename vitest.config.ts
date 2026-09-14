@@ -3,6 +3,11 @@ import { defineConfig } from 'vitest/config';
 const config = defineConfig({
   test: {
     include: ['test/**/*.test.ts'],
+    typecheck: {
+      enabled: true,
+      include: ['test/**/*.test-d.ts'],
+      tsconfig: './tsconfig.json',
+    },
     coverage: {
       include: ['src/**/*.ts'],
       provider: 'v8',
