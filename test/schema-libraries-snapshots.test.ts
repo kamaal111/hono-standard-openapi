@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import { fetchDocument } from './helpers.ts';
 import { schemaLibraries } from './schema-libraries.ts';
 import type { RouteConfigBase, SchemaOrReference } from '../src/types.ts';

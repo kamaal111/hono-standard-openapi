@@ -10,7 +10,7 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "target": "esnext",
-    "types": ["node"],
+    "types": ["node", "vitest/globals"],
     "lib": ["esnext"],
     // For nodejs:
     // "lib": ["esnext"],

@@ -1,5 +1,4 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { describe, expect, it } from 'vitest';
 
 import { standardSchema } from './helpers.ts';
 import { allOf, objectSchema } from '../src/compose.ts';
