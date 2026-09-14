@@ -1,0 +1,27 @@
+test/library-names.ts
+  s_e875f84c50a3ba::t_7c335903327c0d 1
+docs/zod.md
+  s_e875f84c50a3ba::t_392d83694c1aca 50-75
+README.md
+  s_e875f84c50a3ba::t_172d00e073ad3d 38-46
+test/schema-libraries.ts
+  s_e875f84c50a3ba::t_0bf70bc3166286 197-235
+test/app.test.ts
+  s_e875f84c50a3ba::t_a6ef3fa510a7c8 94-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e78856a7a99fdbcb040decb51b09e56078230474",
+  "prompts": {},
+  "sessions": {
+    "s_e875f84c50a3ba": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1380a5fa-4acb-4c1e-8233-f9a5b2a9db6a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Kamaal Farah <kamaal.f1@gmail.com>"
+    }
+  }
+}
