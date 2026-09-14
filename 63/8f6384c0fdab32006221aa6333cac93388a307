@@ -1,0 +1,31 @@
+test/route.test-d.ts
+  s_b5206bb2ab5e17::t_6cbbfd34091d39 1-29,33-41
+  s_b5206bb2ab5e17::t_a9ef738bafaba0 30-32
+test/app.test-d.ts
+  s_b5206bb2ab5e17::t_44a211883b290d 22-24,26
+  s_b5206bb2ab5e17::t_b996384a9504b7 2-4,6-21,25,27-37
+  s_b5206bb2ab5e17::t_e996eca2074acd 1,5
+test/type-inference.test-d.ts
+  s_b5206bb2ab5e17::t_275f4a330cac25 7
+  s_b5206bb2ab5e17::t_69169671893c57 8-29
+  s_b5206bb2ab5e17::t_ac03566659e17a 159-189
+  s_b5206bb2ab5e17::t_e15158d1e76bad 221-255
+src/route.ts
+  s_b5206bb2ab5e17::t_eb9efb0dddd7ca 42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "638f6384c0fdab32006221aa6333cac93388a307",
+  "prompts": {},
+  "sessions": {
+    "s_b5206bb2ab5e17": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "39fa4a43-c7cd-483a-a84e-ab095ec7a409",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": null
+    }
+  }
+}
