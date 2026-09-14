@@ -6,7 +6,7 @@ import type { OpenAPIObject } from 'openapi3-ts/oas31';
 
 import { type DocumentConfig, type GeneratorOptions, OpenAPIGenerator } from './generator.ts';
 import { OpenAPIRegistry } from './registry.ts';
-import type { RouteConfig } from './route.ts';
+import type { OpenAPIRoute, RouteConfig } from './route.ts';
 import { isStandardJSONSchema } from './standard-schema.ts';
 import type { RouteHandler } from './type-inference.ts';
 import { type ContentObject, PARAMETER_SOURCES, type RouteRequest } from './types.ts';
@@ -74,6 +74,15 @@ export class StandardOpenAPIHono<
     }
 
     this.on(methods, paths, handler);
+
+    return this;
+  }
+
+  /** Registers reusable route definitions, mounting and documenting each one. */
+  openapiRoutes<const Routes extends readonly OpenAPIRoute<E, RouteConfig<E>>[]>(routes: Routes): this {
+    for (const { route, handler, hook } of routes) {
+      this.openapi(route, handler, hook);
+    }
 
     return this;
   }

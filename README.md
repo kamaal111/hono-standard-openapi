@@ -8,6 +8,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 - [Installation](#installation)
 - [Schema-library support](#schema-library-support)
 - [Set up a route](#set-up-a-route)
+- [Define a reusable route](#define-a-reusable-route)
 - [Add middleware to a route](#add-middleware-to-a-route)
 - [Add response examples](#add-response-examples)
 - [Handle validation errors](#handle-validation-errors)
@@ -88,6 +89,28 @@ app.openapi(getCard, c => {
 Use `$id` once to make a schema a reusable OpenAPI component. The generated response then refers
 to `#/components/schemas/Card`. See the guides for nested components, multiple responses, errors,
 ArkType metadata, and the Valibot converter setup.
+
+## Define a reusable route
+
+Use `defineOpenAPIRoute` to keep a route, its typed handler, and an optional validation hook in one
+value. This is useful when route definitions live in separate modules. Register one or more
+definitions with `app.openapiRoutes()`:
+
+```ts
+import { createRoute, defineOpenAPIRoute, StandardOpenAPIHono } from '@kamaalio/hono-standard-openapi';
+
+export const getHealth = defineOpenAPIRoute({
+  route: createRoute({
+    method: 'get',
+    path: '/health',
+    responses: { 200: { description: 'The service is healthy' } },
+  }),
+  handler: c => c.json({ status: 'ok' }, 200),
+});
+
+const app = new StandardOpenAPIHono();
+app.openapiRoutes([getHealth]);
+```
 
 ## Add middleware to a route
 
