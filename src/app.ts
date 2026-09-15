@@ -1,6 +1,6 @@
 import { type Hook, sValidator } from '@hono/standard-validator';
 import { type Env, Hono, type Schema, type ToSchema, type ValidationTargets } from 'hono';
-import type { H, Handler, MergePath, MergeSchemaPath } from 'hono/types';
+import type { BlankInput, BlankSchema, H, Handler, MergePath, MergeSchemaPath } from 'hono/types';
 import { mergePath } from 'hono/utils/url';
 import type { OpenAPIObject } from 'openapi3-ts/oas31';
 
@@ -19,9 +19,9 @@ export interface StandardOpenAPIHonoOptions<E extends Env> {
 type HonoInit<E extends Env> = ConstructorParameters<typeof Hono>[0] & StandardOpenAPIHonoOptions<E>;
 
 /** Any app, whatever it was parameterized with — used where apps are handled as peers. */
-type StandardOpenAPIHonoParent<E extends Env> = {
+interface StandardOpenAPIHonoParent<E extends Env> {
   getDefaultHook(visited?: Set<StandardOpenAPIHonoParent<E>>): Hook<unknown, E, string> | undefined;
-};
+}
 
 const JSON_CONTENT_TYPE = /^application\/([a-z\-.]+\+)?json/;
 
@@ -35,7 +35,7 @@ const FORM_CONTENT_TYPES = ['multipart/form-data', 'application/x-www-form-urlen
  */
 export class StandardOpenAPIHono<
   E extends Env = Env,
-  S extends Schema = {},
+  S extends Schema = BlankSchema,
   BasePath extends string = '/',
 > extends Hono<E, S, BasePath> {
   readonly defaultHook: StandardOpenAPIHonoOptions<E>['defaultHook'];
@@ -156,14 +156,14 @@ export class StandardOpenAPIHono<
     path: P,
     config: DocumentConfig,
     generatorConfig: GeneratorOptions = {},
-  ): StandardOpenAPIHono<E, S & ToSchema<'get', MergePath<BasePath, P>, {}, {}>, BasePath> {
+  ): StandardOpenAPIHono<E, S & ToSchema<'get', MergePath<BasePath, P>, BlankInput, BlankInput>, BasePath> {
     this.get(path, c => c.json(this.getOpenAPIDocument(config, generatorConfig)));
 
     return this;
   }
 
   /** The nearest hook, preferring this app's own and falling back to the app it is mounted under. */
-  getDefaultHook(visited: Set<StandardOpenAPIHonoParent<E>> = new Set()): Hook<unknown, E, string> | undefined {
+  getDefaultHook(visited = new Set<StandardOpenAPIHonoParent<E>>()): Hook<unknown, E, string> | undefined {
     if (this.defaultHook != null) {
       return this.defaultHook;
     }

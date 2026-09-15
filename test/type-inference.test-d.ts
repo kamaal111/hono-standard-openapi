@@ -1,4 +1,5 @@
 import type { TypedResponse } from 'hono';
+import type { BlankInput } from 'hono/types';
 import { z } from 'zod';
 
 import { createRoute, StandardOpenAPIHono } from '../src/index.ts';
@@ -184,7 +185,7 @@ describe('request parts', () => {
       responses: { 200: { description: 'ok' } },
     });
 
-    expectTypeOf<ComputeInput<typeof noRequest>>().toEqualTypeOf<{}>();
+    expectTypeOf<ComputeInput<typeof noRequest>>().toEqualTypeOf<BlankInput>();
   });
 });
 

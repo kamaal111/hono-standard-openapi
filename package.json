@@ -46,15 +46,13 @@
     "openapi3-ts": "^4.6.1"
   },
   "devDependencies": {
-    "@kamaal111/oxlint-plugin-anti-slop": "^0.0.4",
-    "@oxlint/plugins": "^1.82.0",
+    "@kamaal111/kamaal-quality-config": "^0.0.3",
     "@standard-schema/spec": "^1.1.0",
     "@types/node": "^26.5.1",
     "@valibot/to-json-schema": "^1.8.0",
     "@vinejs/vine": "^4.4.0",
     "@vitest/coverage-v8": "^5.0.0",
     "arktype": "^2.2.3",
-    "eslint-plugin-import": "^2.32.0",
     "hono": "^4.13.7",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.1",

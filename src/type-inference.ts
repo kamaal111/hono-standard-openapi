@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { Env, Handler, Input, MiddlewareHandler, ToSchema, TypedResponse, ValidationTargets } from 'hono';
-import type { MergePath } from 'hono/types';
+import type { BlankInput, MergePath } from 'hono/types';
 import type {
   ClientErrorStatusCode,
   InfoStatusCode,
@@ -28,7 +28,7 @@ type RequestPart<R extends RouteConfigBase, Part extends string> = R extends { r
 type InputTypeBase<R extends RouteConfigBase, Part extends string, Type extends keyof ValidationTargets> = [
   RequestPart<R, Part>,
 ] extends [never]
-  ? {}
+  ? BlankInput
   : RequestPart<R, Part> extends infer Schema extends StandardSchemaV1
     ? {
         in: {
@@ -36,9 +36,9 @@ type InputTypeBase<R extends RouteConfigBase, Part extends string, Type extends 
             ? { [K2 in keyof StandardSchemaV1.InferInput<Schema>]?: StandardSchemaV1.InferInput<Schema>[K2] }
             : { [K2 in keyof StandardSchemaV1.InferInput<Schema>]: StandardSchemaV1.InferInput<Schema>[K2] };
         };
-        out: { [K in Type]: StandardSchemaV1.InferOutput<Schema> };
+        out: Record<Type, StandardSchemaV1.InferOutput<Schema>>;
       }
-    : {};
+    : BlankInput;
 
 type RequestContent<R extends RouteConfigBase> = R extends { request: { body: { content: infer Content } } }
   ? Content
@@ -61,13 +61,13 @@ type BodySchema<Content, MediaType> = MediaType extends keyof Content
 type InputTypeBody<R extends RouteConfigBase, MediaType, Target extends 'json' | 'form'> = [
   BodySchema<RequestContent<R>, MediaType>,
 ] extends [never]
-  ? {}
+  ? BlankInput
   : BodySchema<RequestContent<R>, MediaType> extends infer Schema extends StandardSchemaV1
     ? {
-        in: { [K in Target]: StandardSchemaV1.InferInput<Schema> };
-        out: { [K in Target]: StandardSchemaV1.InferOutput<Schema> };
+        in: Record<Target, StandardSchemaV1.InferInput<Schema>>;
+        out: Record<Target, StandardSchemaV1.InferOutput<Schema>>;
       }
-    : {};
+    : BlankInput;
 
 /** Everything a handler can read off the request, derived from the route's schemas. */
 export type ComputeInput<R extends RouteConfigBase> = InputTypeBase<R, 'params', 'param'> &
@@ -77,13 +77,13 @@ export type ComputeInput<R extends RouteConfigBase> = InputTypeBase<R, 'params',
   InputTypeBody<R, JsonMediaType<RequestContent<R>>, 'json'> &
   InputTypeBody<R, FormMediaType<RequestContent<R>>, 'form'>;
 
-type StatusCodeRanges = {
+interface StatusCodeRanges {
   '1XX': InfoStatusCode;
   '2XX': SuccessStatusCode;
   '3XX': RedirectStatusCode;
   '4XX': ClientErrorStatusCode;
   '5XX': ServerErrorStatusCode;
-};
+}
 
 type StatusFrom<Key> = Key extends keyof StatusCodeRanges
   ? StatusCodeRanges[Key]
@@ -166,10 +166,10 @@ type EnvsOf<M> = M extends readonly unknown[] ? EnvOf<M[number]> : EnvOf<M>;
  * The environment a route's own middleware adds to its handler.
  *
  * Each middleware contributes its own bindings and variables, so several of them intersect. A route
- * with no middleware adds nothing, which has to be `{}` rather than `never` — intersecting `never`
+ * with no middleware adds nothing — intersecting `never`
  * would erase the app's own environment.
  */
-export type MiddlewareEnv<M> = [EnvsOf<M>] extends [never] ? {} : UnionToIntersection<EnvsOf<M>>;
+export type MiddlewareEnv<M> = [EnvsOf<M>] extends [never] ? BlankInput : UnionToIntersection<EnvsOf<M>>;
 
 /** The environment a route's handler runs in: the app's, widened by the route's own middleware. */
 export type RouteEnv<M, E extends Env> = E & MiddlewareEnv<M>;
@@ -191,5 +191,5 @@ export type RoutesToSchema<
 > = Configs extends readonly [infer Head, ...infer Tail]
   ? Head extends RouteConfigBase
     ? RouteToSchema<Head, BasePath> & RoutesToSchema<Tail extends readonly RouteConfigBase[] ? Tail : [], BasePath>
-    : {}
-  : {};
+    : BlankInput
+  : BlankInput;
