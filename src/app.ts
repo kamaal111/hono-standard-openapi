@@ -1,14 +1,14 @@
 import { type Hook, sValidator } from '@hono/standard-validator';
-import { type Env, Hono, type MiddlewareHandler, type Schema, type ValidationTargets } from 'hono';
-import type { Handler } from 'hono/types';
+import { type Env, Hono, type Schema, type ToSchema, type ValidationTargets } from 'hono';
+import type { H, Handler, MergePath, MergeSchemaPath } from 'hono/types';
 import { mergePath } from 'hono/utils/url';
 import type { OpenAPIObject } from 'openapi3-ts/oas31';
 
 import { type DocumentConfig, type GeneratorOptions, OpenAPIGenerator } from './generator.ts';
 import { OpenAPIRegistry } from './registry.ts';
-import type { OpenAPIRoute, RouteConfig } from './route.ts';
+import type { OpenAPIRoute, RouteConfig, RouteHook, RouteMiddlewareList } from './route.ts';
 import { isStandardJSONSchema } from './standard-schema.ts';
-import type { RouteHandler } from './type-inference.ts';
+import type { RouteEnv, RouteHandler, RoutesToSchema, RouteToSchema } from './type-inference.ts';
 import { type ContentObject, PARAMETER_SOURCES, type RouteRequest } from './types.ts';
 
 export interface StandardOpenAPIHonoOptions<E extends Env> {
@@ -38,22 +38,32 @@ export class StandardOpenAPIHono<
   S extends Schema = {},
   BasePath extends string = '/',
 > extends Hono<E, S, BasePath> {
-  readonly openAPIRegistry: OpenAPIRegistry;
   readonly defaultHook: StandardOpenAPIHonoOptions<E>['defaultHook'];
+  #registry: OpenAPIRegistry;
   #parentApp?: StandardOpenAPIHonoParent<E> | undefined;
+  #routePrefix = '/';
 
   constructor(init?: HonoInit<E>) {
     super(init);
-    this.openAPIRegistry = new OpenAPIRegistry();
+    this.#registry = new OpenAPIRegistry();
     this.defaultHook = init?.defaultHook;
   }
 
+  /** Everything recorded for the document so far. Shared with apps derived by `basePath()`. */
+  get openAPIRegistry(): OpenAPIRegistry {
+    return this.#registry;
+  }
+
   /** Registers a route: mounts it, validates its request, and records it in the document. */
-  openapi<R extends RouteConfig<E>>(route: R, handler: RouteHandler<R, E>, hook?: Hook<unknown, E, string>): this {
+  openapi<R extends RouteConfig>(
+    route: R,
+    handler: RouteHandler<R, RouteEnv<R['middleware'], E>>,
+    hook?: RouteHook<R, E>,
+  ): StandardOpenAPIHono<E, S & RouteToSchema<R, BasePath>, BasePath> {
     const { hide, middleware, ...documented } = route;
 
     if (hide !== true) {
-      this.openAPIRegistry.registerPath(documented);
+      this.openAPIRegistry.registerPath({ ...documented, path: this.#documentPath(route.path) });
     }
 
     const effectiveHook: Hook<unknown, E, string> = (result, c) => {
@@ -65,7 +75,7 @@ export class StandardOpenAPIHono<
     const methods = [route.method];
     const paths = [toRoutingPath(route.path)];
 
-    for (const middlewareHandler of normalizeMiddleware<E>(middleware)) {
+    for (const middlewareHandler of normalizeMiddleware(middleware)) {
       this.on(methods, paths, middlewareHandler);
     }
 
@@ -78,8 +88,15 @@ export class StandardOpenAPIHono<
     return this;
   }
 
-  /** Registers reusable route definitions, mounting and documenting each one. */
-  openapiRoutes<const Routes extends readonly OpenAPIRoute<E, RouteConfig<E>>[]>(routes: Routes): this {
+  /**
+   * Registers reusable route definitions, mounting and documenting each one.
+   *
+   * The configs are inferred as a tuple and each entry is checked against its own route, so a
+   * handler still sees exactly the request and responses its own route declares.
+   */
+  openapiRoutes<const Configs extends readonly RouteConfig[]>(routes: {
+    readonly [K in keyof Configs]: OpenAPIRoute<E, Configs[K]>;
+  }): StandardOpenAPIHono<E, S & RoutesToSchema<Configs, BasePath>, BasePath> {
     for (const { route, handler, hook } of routes) {
       this.openapi(route, handler, hook);
     }
@@ -91,7 +108,7 @@ export class StandardOpenAPIHono<
   route<SubPath extends string, SubEnv extends Env, SubSchema extends Schema, SubBasePath extends string>(
     path: SubPath,
     app: Hono<SubEnv, SubSchema, SubBasePath>,
-  ): this {
+  ): StandardOpenAPIHono<E, MergeSchemaPath<SubSchema, MergePath<BasePath, SubPath>> & S, BasePath> {
     super.route(path, app);
 
     if (app instanceof StandardOpenAPIHono) {
@@ -103,13 +120,43 @@ export class StandardOpenAPIHono<
     return this;
   }
 
+  /**
+   * Narrows the app to a path prefix, the way Hono's own `basePath` does.
+   *
+   * Hono clones into a plain `Hono`, which would drop both the registry and `openapi()`, so the
+   * derived app is rebuilt here. It shares the router, the routes and the registry, so either app
+   * serves and documents the whole surface.
+   */
+  basePath<SubPath extends string>(path: SubPath): StandardOpenAPIHono<E, S, MergePath<BasePath, SubPath>> {
+    const cloned = super.basePath(path);
+    const derived = new StandardOpenAPIHono<E, S, MergePath<BasePath, SubPath>>({ defaultHook: this.defaultHook });
+    const prefix = mergePath(this.#routePrefix, path);
+
+    derived.#registry = this.#registry;
+    derived.#parentApp = this;
+    derived.#routePrefix = prefix;
+    derived.router = cloned.router;
+    derived.routes = cloned.routes;
+    Object.assign(derived, { _basePath: prefix, getPath: cloned.getPath });
+
+    return derived;
+  }
+
+  #documentPath(path: string): string {
+    return mergePath(this.#routePrefix.replaceAll(/:([^/]+)/g, '{$1}'), path);
+  }
+
   /** Builds the document for everything registered so far. */
   getOpenAPIDocument(config: DocumentConfig, generatorConfig: GeneratorOptions = {}): OpenAPIObject {
     return new OpenAPIGenerator(this.openAPIRegistry, generatorConfig).generateDocument(config);
   }
 
   /** Serves the document as JSON at `path`. */
-  doc(path: string, config: DocumentConfig, generatorConfig: GeneratorOptions = {}): this {
+  doc<P extends string>(
+    path: P,
+    config: DocumentConfig,
+    generatorConfig: GeneratorOptions = {},
+  ): StandardOpenAPIHono<E, S & ToSchema<'get', MergePath<BasePath, P>, {}, {}>, BasePath> {
     this.get(path, c => c.json(this.getOpenAPIDocument(config, generatorConfig)));
 
     return this;
@@ -221,18 +268,16 @@ function skipWhenBodyAbsent<E extends Env>(
   };
 }
 
-function isMiddlewareHandler<E extends Env>(
-  value: MiddlewareHandler<E> | ReadonlyArray<MiddlewareHandler<E>>,
-): value is MiddlewareHandler<E> {
+function isSingleMiddleware(value: RouteMiddlewareList): value is H {
   return !Array.isArray(value);
 }
 
-function normalizeMiddleware<E extends Env>(middleware: RouteConfig<E>['middleware']): MiddlewareHandler<E>[] {
+function normalizeMiddleware(middleware: RouteConfig['middleware']): H[] {
   if (middleware == null) {
     return [];
   }
 
-  if (isMiddlewareHandler(middleware)) {
+  if (isSingleMiddleware(middleware)) {
     return [middleware];
   }
 
