@@ -236,7 +236,7 @@ function splitDefinitions(raw: JSONSchema) {
       continue;
     }
 
-    delete root[keyword];
+    root[keyword] = undefined;
 
     for (const [key, value] of Object.entries(block)) {
       if (isObjectLike(value)) {

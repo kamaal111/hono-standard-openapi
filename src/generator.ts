@@ -57,7 +57,7 @@ export type DocumentConfig = Omit<OpenAPIObject, 'paths' | 'webhooks'>;
 /** A value that can appear in the document under construction: plain JSON, or a real OpenAPI object. */
 type DocumentValue =
   | JsonValue
-  | ReadonlyArray<DocumentValue>
+  | readonly DocumentValue[]
   | { readonly [key: string]: DocumentValue }
   | ParameterObject
   | ReferenceObject
@@ -83,14 +83,17 @@ type ContentEntry = Omit<MediaTypeObject, 'schema'> & { schema?: OasSchema };
 
 type ResponseContent = Record<string, ContentEntry>;
 
-type GeneratedResponse = {
+interface GeneratedResponse {
   description: string;
   headers?: HeadersObject | JsonObject;
   content?: ResponseContent;
   links?: LinksObject;
-};
+}
 
-type MergeOperation = { method: string; operation: RawDocumentObject };
+interface MergeOperation {
+  method: string;
+  operation: RawDocumentObject;
+}
 
 const TARGETS = {
   '3.0': 'openapi-3.0',

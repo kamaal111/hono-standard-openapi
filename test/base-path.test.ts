@@ -17,12 +17,12 @@ const documentConfig = { info: { title: 'Cards', version: '1.0.0' }, openapi: '3
 
 S.enableStandardJSONSchema();
 
-type SchemaLibrary = {
+interface SchemaLibrary {
   createMessageSchema(): StandardSchema;
   createOkSchema(): StandardSchema;
   createUserSchema(): StandardSchema;
   createUUIDParamsSchema(): StandardSchema;
-};
+}
 
 const schemaLibraryRecord: LibraryRecord<SchemaLibrary> = {
   ArkType: {

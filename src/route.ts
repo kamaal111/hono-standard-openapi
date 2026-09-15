@@ -32,7 +32,7 @@ export type RouteHook<R extends RouteConfigBase, E extends Env = Env> = Hook<
   E,
   ConvertPathType<R['path']>,
   keyof ValidationTargets,
-  RouteConfigToTypedResponse<R> | Response | void | Promise<RouteConfigToTypedResponse<R> | Response | void>
+  RouteConfigToTypedResponse<R> | Response | undefined | Promise<RouteConfigToTypedResponse<R> | Response | undefined>
 >;
 
 /** A route and the functions that register it with {@link StandardOpenAPIHono.openapi}. */

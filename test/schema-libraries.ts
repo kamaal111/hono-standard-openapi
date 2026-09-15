@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-export type SchemaLibrary = {
+export interface SchemaLibrary {
   supportsComponents: boolean;
   supportsOpenapi30Target: boolean;
   createCard(): SchemaFixture;
@@ -26,22 +26,22 @@ export type SchemaLibrary = {
   createNullableField(): SchemaFixture;
   createParamsWithExample(): ExampleSchemaFixture;
   createResponseSchemas(): ResponseSchemas;
-};
+}
 
-export type SchemaFixture = {
+export interface SchemaFixture {
   readonly libraryOptions?: StandardJSONSchemaV1.Options['libraryOptions'];
   readonly schema: StandardSchema;
-};
+}
 
 export type ExampleSchemaFixture = SchemaFixture & {
   readonly expectedNameSchema: JsonObject;
 };
 
-export type ResponseSchemas = {
+export interface ResponseSchemas {
   readonly card: StandardSchema;
   readonly error: StandardSchema;
   readonly libraryOptions?: StandardJSONSchemaV1.Options['libraryOptions'];
-};
+}
 
 S.enableStandardJSONSchema();
 

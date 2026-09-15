@@ -34,7 +34,7 @@ function issueCount(body: JsonObject): number {
   return error.length;
 }
 
-type SchemaLibrary = {
+interface SchemaLibrary {
   createCardResponse(): StandardSchema;
   createCookieSchema(): StandardSchema;
   createNameSchema(): StandardSchema;
@@ -42,7 +42,7 @@ type SchemaLibrary = {
   createTokenHeaderSchema(): StandardSchema;
   createUppercaseTokenHeaderSchema(): StandardSchema;
   createUUIDParamsSchema(): StandardSchema;
-};
+}
 
 const schemaLibraryRecord: LibraryRecord<SchemaLibrary> = {
   ArkType: {

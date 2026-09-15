@@ -3,10 +3,10 @@ import type { DocumentConfig, GeneratorOptions } from '../src/generator.ts';
 import type { JSONSchema, StandardSchema } from '../src/standard-schema.ts';
 import type { RouteConfigBase } from '../src/types.ts';
 
-type SchemaDocuments = {
+interface SchemaDocuments {
   readonly input?: JSONSchema;
   readonly output?: JSONSchema;
-};
+}
 
 export function standardSchema({ input = {}, output = input }: SchemaDocuments): StandardSchema {
   return {

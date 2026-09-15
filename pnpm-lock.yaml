@@ -173,12 +173,9 @@ importers:
         specifier: ^4.6.1
         version: 4.6.1
     devDependencies:
-      '@kamaal111/oxlint-plugin-anti-slop':
-        specifier: ^0.0.4
-        version: 0.0.4
-      '@oxlint/plugins':
-        specifier: ^1.82.0
-        version: 1.82.0
+      '@kamaal111/kamaal-quality-config':
+        specifier: ^0.0.3
+        version: 0.0.3(eslint@9.39.5(supports-color@7.2.0))(supports-color@7.2.0)
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
@@ -197,9 +194,6 @@ importers:
       arktype:
         specifier: ^2.2.3
         version: 2.2.3
-      eslint-plugin-import:
-        specifier: ^2.32.0
-        version: 2.32.0(eslint@9.39.5(supports-color@7.2.0))(supports-color@7.2.0)
       hono:
         specifier: ^4.13.7
         version: 4.13.7
@@ -336,6 +330,10 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@kamaal111/kamaal-quality-config@0.0.3':
+    resolution: {integrity: sha512-dKE8qrmS4igYlRkYLbZCDo9e5/k9HgWHoislYHDjPA1e0JSu2zar/ioIQ0CeireLtVgWqjwGyttWBDsN54Djmw==}
+    engines: {node: '>=26.0.0'}
 
   '@kamaal111/oxlint-plugin-anti-slop@0.0.4':
     resolution: {integrity: sha512-YfHzW4k4t+W6rHUWFfbAN9bJoe5k/stX2KWQ5R/+yL/fh8OflnKj59C1K/qBxU4BAx3+2Bjc/u9w1/DrLsNP3Q==}
@@ -619,10 +617,6 @@ packages:
 
   '@oxlint/plugins@1.78.0':
     resolution: {integrity: sha512-Ypt8KeRYw+4jUtlPirfcHWMrn5ms12VrrFPD+Mds477/7tJxG1Kcz2Yrg2nVcTQEUx/GdlhS+BUg1kmxNm04Ug==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-
-  '@oxlint/plugins@1.82.0':
-    resolution: {integrity: sha512-IDF4UXBNOaCeLoEpVxf5Bg85KOWdeuBEkbo1rGzS2vXcbD+GT1asBSeeTC+5BgW6NFTHVByd6N5giHsFPGtwAA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   '@poppinss/macroable@1.1.2':
@@ -2154,6 +2148,17 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
+  '@kamaal111/kamaal-quality-config@0.0.3(eslint@9.39.5(supports-color@7.2.0))(supports-color@7.2.0)':
+    dependencies:
+      '@kamaal111/oxlint-plugin-anti-slop': 0.0.4
+      eslint-plugin-import: 2.32.0(eslint@9.39.5(supports-color@7.2.0))(supports-color@7.2.0)
+    transitivePeerDependencies:
+      - '@typescript-eslint/parser'
+      - eslint
+      - eslint-import-resolver-typescript
+      - eslint-import-resolver-webpack
+      - supports-color
+
   '@kamaal111/oxlint-plugin-anti-slop@0.0.4':
     dependencies:
       '@oxlint/plugins': 1.78.0
@@ -2293,8 +2298,6 @@ snapshots:
     optional: true
 
   '@oxlint/plugins@1.78.0': {}
-
-  '@oxlint/plugins@1.82.0': {}
 
   '@poppinss/macroable@1.1.2': {}
 
