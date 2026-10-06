@@ -23,6 +23,38 @@ describe('route utilities', () => {
     expect(definition.handler).toBe(handler);
     expect(definition.hook).toBe(hook);
   });
+
+  it('returns the exact definition object from a curried factory including its hook', () => {
+    const route = createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'ok' } } });
+    const handler = () => new Response('ok');
+    const hook = () => undefined;
+    const input = { route, handler, hook };
+    const defineRoute = defineOpenAPIRoute();
+    const definition = defineRoute(input);
+
+    expect(definition).toBe(input);
+    expect(definition.route).toBe(route);
+    expect(definition.handler).toBe(handler);
+    expect(definition.hook).toBe(hook);
+  });
+
+  it('reuses a curried factory for definitions without hooks', () => {
+    const defineRoute = defineOpenAPIRoute();
+
+    const health = {
+      route: createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'ok' } } }),
+      handler: () => new Response('ok'),
+    };
+
+    const cards = {
+      route: createRoute({ method: 'get', path: '/cards', responses: { 200: { description: 'ok' } } }),
+      handler: () => new Response('cards'),
+    };
+
+    expect(defineRoute(health)).toBe(health);
+    expect(defineRoute(cards)).toBe(cards);
+    expect(defineRoute(health)).not.toHaveProperty('hook');
+  });
 });
 
 describe('Standard Schema utilities', () => {

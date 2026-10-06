@@ -112,6 +112,31 @@ const app = new StandardOpenAPIHono();
 app.openapiRoutes([getHealth]);
 ```
 
+When your handler needs application context variables, create a factory with your environment type.
+The factory infers each route's request and response types, so you do not need to supply `typeof route`:
+
+```ts
+interface AppEnv {
+  Variables: { userId: string };
+}
+
+const defineRoute = defineOpenAPIRoute<AppEnv>();
+
+const getCurrentUser = defineRoute({
+  route: createRoute({
+    method: 'get',
+    path: '/me',
+    responses: { 200: { description: 'The authenticated user' } },
+  }),
+  handler: c => c.json({ userId: c.get('userId') }, 200),
+});
+
+new StandardOpenAPIHono<AppEnv>().openapiRoutes([getCurrentUser]);
+```
+
+Existing direct calls, including `defineOpenAPIRoute<AppEnv, typeof route>({ route, handler })`,
+remain supported. Calling the factory returns the supplied definition object unchanged.
+
 ## Add middleware to a route
 
 Set `middleware` on the route to run one Hono middleware function, or an array of them, before
