@@ -1,5 +1,6 @@
 import type { TypedResponse } from 'hono';
 import { hc } from 'hono/client';
+import { every } from 'hono/combine';
 import { createMiddleware } from 'hono/factory';
 import type { SuccessStatusCode } from 'hono/utils/http-status';
 import { z } from 'zod';
@@ -191,5 +192,118 @@ describe('handler returns held to the documented responses', () => {
     >();
 
     new StandardOpenAPIHono().openapi(route, () => new Response(null, { status: 204 }));
+  });
+});
+
+describe('application environment with untyped route middleware', () => {
+  interface AppEnv {
+    Variables: { fromApp: string };
+    Bindings: { API_KEY: string };
+  }
+
+  const session = createMiddleware<AppEnv>(async (_c, next) => {
+    await next();
+  });
+
+  const trace = createMiddleware<{ Variables: { traceId: number } }>(async (c, next) => {
+    c.set('traceId', 1);
+
+    await next();
+  });
+
+  const config = {
+    method: 'get' as const,
+    path: '/context',
+    responses: { 200: { description: 'ok' } },
+  };
+
+  it('preserves app variables and bindings with a single untyped middleware', () => {
+    const route = createRoute({ ...config, middleware: every(session) });
+
+    new StandardOpenAPIHono<AppEnv>().openapi(route, c => {
+      expectTypeOf(c.get('fromApp')).not.toBeAny();
+      expectTypeOf(c.get('fromApp')).toEqualTypeOf<string>();
+      expectTypeOf(c.env.API_KEY).toEqualTypeOf<string>();
+
+      return c.body(null, 200);
+    });
+  });
+
+  it('preserves app variables and bindings with a mutable untyped middleware array', () => {
+    const route = createRoute({ ...config, middleware: [every(session)] });
+
+    new StandardOpenAPIHono<AppEnv>().openapi(route, c => {
+      expectTypeOf(c.get('fromApp')).toEqualTypeOf<string>();
+      expectTypeOf(c.env.API_KEY).toEqualTypeOf<string>();
+
+      return c.body(null, 200);
+    });
+  });
+
+  it('preserves typed contributions in a mutable mixed middleware array', () => {
+    const route = createRoute({ ...config, middleware: [every(session), trace] });
+
+    new StandardOpenAPIHono<AppEnv>().openapi(route, c => {
+      expectTypeOf(c.get('fromApp')).toEqualTypeOf<string>();
+      expectTypeOf(c.get('traceId')).toEqualTypeOf<number>();
+      expectTypeOf(c.env.API_KEY).toEqualTypeOf<string>();
+
+      return c.body(null, 200);
+    });
+  });
+
+  it('preserves app variables and bindings when registering a readonly untyped middleware tuple', () => {
+    const route = createRoute({ ...config, middleware: [every(session)] as const });
+
+    new StandardOpenAPIHono<AppEnv>().openapiRoutes([
+      {
+        route,
+        handler: c => {
+          expectTypeOf(c.get('fromApp')).toEqualTypeOf<string>();
+          expectTypeOf(c.env.API_KEY).toEqualTypeOf<string>();
+
+          return c.body(null, 200);
+        },
+      },
+    ]);
+  });
+
+  it('preserves typed contributions when registering a readonly mixed middleware tuple', () => {
+    const route = createRoute({ ...config, middleware: [every(session), trace] as const });
+
+    new StandardOpenAPIHono<AppEnv>().openapiRoutes([
+      {
+        route,
+        handler: c => {
+          expectTypeOf(c.get('fromApp')).toEqualTypeOf<string>();
+          expectTypeOf(c.get('traceId')).toEqualTypeOf<number>();
+          expectTypeOf(c.env.API_KEY).toEqualTypeOf<string>();
+
+          return c.body(null, 200);
+        },
+      },
+    ]);
+  });
+
+  it('preserves the app environment with an empty middleware array', () => {
+    const route = createRoute({ ...config, middleware: [] as const });
+
+    new StandardOpenAPIHono<AppEnv>().openapi(route, c => {
+      expectTypeOf(c.get('fromApp')).toEqualTypeOf<string>();
+      expectTypeOf(c.env.API_KEY).toEqualTypeOf<string>();
+
+      return c.body(null, 200);
+    });
+  });
+
+  it('preserves app bindings when no middleware is present', () => {
+    const route = createRoute(config);
+
+    new StandardOpenAPIHono<AppEnv>().openapi(route, c => {
+      expectTypeOf(c.get('fromApp')).toEqualTypeOf<string>();
+      expectTypeOf(c.env.API_KEY).toEqualTypeOf<string>();
+
+      return c.body(null, 200);
+    });
   });
 });

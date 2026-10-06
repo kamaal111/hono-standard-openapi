@@ -158,15 +158,23 @@ type UnionToIntersection<U> = (U extends unknown ? (value: U) => void : never) e
   ? I
   : never;
 
-type EnvOf<M> = M extends MiddlewareHandler<infer HandlerEnv, string, Input> ? HandlerEnv : never;
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
+type EnvOf<M> =
+  M extends MiddlewareHandler<infer HandlerEnv, string, Input>
+    ? IsAny<HandlerEnv> extends true
+      ? never
+      : HandlerEnv
+    : never;
 
 type EnvsOf<M> = M extends readonly unknown[] ? EnvOf<M[number]> : EnvOf<M>;
 
 /**
  * The environment a route's own middleware adds to its handler.
  *
- * Each middleware contributes its own bindings and variables, so several of them intersect. A route
- * with no middleware adds nothing — intersecting `never`
+ * Each typed middleware contributes its own bindings and variables, so several of them intersect.
+ * Untyped middleware contributes nothing, preserving both the app's environment and other typed
+ * middleware contributions. A route with no typed middleware adds nothing — intersecting `never`
  * would erase the app's own environment.
  */
 export type MiddlewareEnv<M> = [EnvsOf<M>] extends [never] ? BlankInput : UnionToIntersection<EnvsOf<M>>;
