@@ -47,10 +47,26 @@ export interface OpenAPIRoute<E extends Env = Env, R extends RouteConfig = Route
  *
  * The definition is returned unchanged; register it with
  * `app.openapi(definition.route, definition.handler, definition.hook)`.
+ * Call `defineOpenAPIRoute<AppEnv>()` to create a reusable factory with an explicit environment
+ * and an inferred route type, or pass a definition directly.
  */
+export function defineOpenAPIRoute<E extends Env = Env>(): <R extends RouteConfig>(
+  definition: OpenAPIRoute<E, R>,
+) => OpenAPIRoute<E, R>;
 export function defineOpenAPIRoute<E extends Env = Env, R extends RouteConfig = RouteConfig>(
   definition: OpenAPIRoute<E, R>,
-): OpenAPIRoute<E, R> {
+): OpenAPIRoute<E, R>;
+export function defineOpenAPIRoute<E extends Env = Env, R extends RouteConfig = RouteConfig>(
+  definition?: OpenAPIRoute<E, R>,
+):
+  | OpenAPIRoute<E, R>
+  | (<InferredRoute extends RouteConfig>(
+      definition: OpenAPIRoute<E, InferredRoute>,
+    ) => OpenAPIRoute<E, InferredRoute>) {
+  if (definition === undefined) {
+    return <InferredRoute extends RouteConfig>(routeDefinition: OpenAPIRoute<E, InferredRoute>) => routeDefinition;
+  }
+
   return definition;
 }
 
