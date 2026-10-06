@@ -27,7 +27,7 @@ describe.each(schemaLibraries)('$name', library => {
     await expect(JSON.stringify(document, null, 2)).toMatchFileSnapshot('./fixtures/card-with-price.without-refs.json');
   });
 
-  it.skipIf(!library.supportsComponents)('matches the fixture with refs', async () => {
+  it('matches the fixture with refs', { skip: !library.supportsComponents }, async () => {
     const { libraryOptions, schema } = library.createCardWithPrice();
     const response = await fetchDocument([cardRoute(schema)], DOC_CONFIG, { libraryOptions });
     const document = JSON.parse(await response.text());
@@ -35,7 +35,7 @@ describe.each(schemaLibraries)('$name', library => {
     await expect(JSON.stringify(document, null, 2)).toMatchFileSnapshot('./fixtures/card-with-price.with-refs.json');
   });
 
-  it.skipIf(library.supportsComponents)('matches the fixture without refs even from the named schema', async () => {
+  it('matches the fixture without refs even from the named schema', { skip: library.supportsComponents }, async () => {
     const { libraryOptions, schema } = library.createCardWithPrice();
     const response = await fetchDocument([cardRoute(schema)], DOC_CONFIG, { libraryOptions });
     const document = JSON.parse(await response.text());

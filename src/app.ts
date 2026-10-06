@@ -225,13 +225,13 @@ function buildBodyValidators<E extends Env>(
       continue;
     }
 
-    const target = JSON_CONTENT_TYPE.test(mediaType)
-      ? 'json'
-      : FORM_CONTENT_TYPES.some(formType => mediaType.startsWith(formType))
-        ? 'form'
-        : undefined;
+    let target: 'json' | 'form';
 
-    if (target == null) {
+    if (JSON_CONTENT_TYPE.test(mediaType)) {
+      target = 'json';
+    } else if (FORM_CONTENT_TYPES.some(formType => mediaType.startsWith(formType))) {
+      target = 'form';
+    } else {
       continue;
     }
 
