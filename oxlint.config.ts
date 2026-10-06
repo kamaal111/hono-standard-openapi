@@ -1,9 +1,9 @@
-import kamaalQualityConfig from '@kamaal111/kamaal-quality-config';
+import kamaalQualityConfig from '@kamaal111/kamaal-quality-config/oxlint';
 import { defineConfig } from 'oxlint';
 
 export default defineConfig({
   extends: [kamaalQualityConfig],
-  plugins: ['typescript', 'unicorn', 'oxc'],
+  plugins: ['typescript', 'unicorn', 'oxc', 'vitest'],
   options: {
     typeAware: true,
   },

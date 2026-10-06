@@ -46,27 +46,27 @@
     "openapi3-ts": "^4.6.1"
   },
   "devDependencies": {
-    "@kamaal111/kamaal-quality-config": "^0.0.3",
+    "@kamaal111/kamaal-quality-config": "^0.3.0",
     "@standard-schema/spec": "^1.1.0",
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.4",
     "@valibot/to-json-schema": "^1.8.0",
     "@vinejs/vine": "^4.4.0",
-    "@vitest/coverage-v8": "^5.0.0",
-    "arktype": "^2.2.3",
-    "hono": "^4.13.7",
+    "@vitest/coverage-v8": "^5.0.3",
+    "arktype": "^2.2.7",
+    "hono": "^4.13.13",
     "husky": "^9.1.7",
-    "lint-staged": "^17.5.1",
-    "oxfmt": "^0.67.0",
-    "oxlint": "^1.82.0",
-    "oxlint-tsgolint": "^7.0.2001",
+    "lint-staged": "^17.6.0",
+    "oxfmt": "^0.72.0",
+    "oxlint": "^1.87.0",
+    "oxlint-tsgolint": "^7.0.2003",
     "sury": "^11.0.0",
     "typescript": "^7.0.2",
     "valibot": "^1.5.0",
-    "vitest": "^5.0.0",
-    "zod": "^4.6.4"
+    "vitest": "^5.0.3",
+    "zod": "^4.6.5"
   },
   "peerDependencies": {
-    "hono": ">=4.10.0"
+    "hono": ">=4.11.2"
   },
   "lint-staged": {
     "*.{js,mjs,cjs,ts}": "pnpm run lint",
@@ -75,7 +75,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^12.4.1",
+      "version": "^12.9.1",
       "onFail": "download"
     }
   }

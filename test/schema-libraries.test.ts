@@ -40,7 +40,7 @@ describe.each(schemaLibraries)('$name', library => {
     expect(await Card['~standard'].validate({ id: 'card-1' })).toHaveProperty('issues');
   });
 
-  it.skipIf(!library.supportsComponents)('shares a named root schema across routes', async () => {
+  it('shares a named root schema across routes', { skip: !library.supportsComponents }, async () => {
     const { libraryOptions, schema: Card } = library.createCard();
 
     const document = await generateDocument(
@@ -62,14 +62,14 @@ describe.each(schemaLibraries)('$name', library => {
     });
   });
 
-  it.skipIf(!library.supportsComponents)('preserves schema examples from the library converter', async () => {
+  it('preserves schema examples from the library converter', { skip: !library.supportsComponents }, async () => {
     const { expectedNameSchema, libraryOptions, schema: Card } = library.createCardWithExample();
     const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
 
     expect(document.components?.schemas?.Card?.properties?.name).toEqual(expectedNameSchema);
   });
 
-  it.skipIf(library.supportsComponents)('keeps schema examples inline instead of naming a component', async () => {
+  it('keeps schema examples inline instead of naming a component', { skip: library.supportsComponents }, async () => {
     const { expectedNameSchema, libraryOptions, schema: Card } = library.createCardWithExample();
     const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
 
@@ -96,7 +96,7 @@ describe.each(schemaLibraries)('$name', library => {
     ]);
   });
 
-  it.skipIf(library.supportsComponents)('emits unnamed schemas inline', async () => {
+  it('emits unnamed schemas inline', { skip: library.supportsComponents }, async () => {
     const { schema: Card } = library.createCard();
     const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG);
 
@@ -107,28 +107,36 @@ describe.each(schemaLibraries)('$name', library => {
     });
   });
 
-  it.skipIf(!library.supportsComponents)('shares a nested schema through an OpenAPI component reference', async () => {
-    const { libraryOptions, schema: Card } = library.createCardWithPrice();
-    const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
+  it(
+    'shares a nested schema through an OpenAPI component reference',
+    { skip: !library.supportsComponents },
+    async () => {
+      const { libraryOptions, schema: Card } = library.createCardWithPrice();
+      const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
 
-    expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
-      $ref: '#/components/schemas/Card',
-    });
-    expect(document.components?.schemas?.Card.properties.price).toEqual(EXPECTED_NESTED_PRICE);
-    expect(document.components?.schemas?.Price).toEqual(EXPECTED_PRICE_COMPONENT);
-  });
+      expect(document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema).toEqual({
+        $ref: '#/components/schemas/Card',
+      });
+      expect(document.components?.schemas?.Card.properties.price).toEqual(EXPECTED_NESTED_PRICE);
+      expect(document.components?.schemas?.Price).toEqual(EXPECTED_PRICE_COMPONENT);
+    },
+  );
 
-  it.skipIf(library.supportsComponents)('keeps a nested schema inline instead of referencing a component', async () => {
-    const { libraryOptions, schema: Card } = library.createCardWithPrice();
-    const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
-    const schema = document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema;
+  it(
+    'keeps a nested schema inline instead of referencing a component',
+    { skip: library.supportsComponents },
+    async () => {
+      const { libraryOptions, schema: Card } = library.createCardWithPrice();
+      const document = await generateDocument([jsonResponseRoute(Card)], DOC_CONFIG, { libraryOptions });
+      const schema = document.paths?.['/things']?.get.responses['200'].content[JSON_TYPE].schema;
 
-    expect(schema.$ref).toBeUndefined();
-    expect(schema.properties.price).toEqual(EXPECTED_PRICE_COMPONENT);
-    expect(document.components?.schemas).toEqual({});
-  });
+      expect(schema.$ref).toBeUndefined();
+      expect(schema.properties.price).toEqual(EXPECTED_PRICE_COMPONENT);
+      expect(document.components?.schemas).toEqual({});
+    },
+  );
 
-  it.skipIf(!library.supportsComponents)('documents successful and error responses as components', async () => {
+  it('documents successful and error responses as components', { skip: !library.supportsComponents }, async () => {
     const { card, error, libraryOptions } = library.createResponseSchemas();
 
     const document = await generateDocument(
@@ -172,8 +180,9 @@ describe.each(schemaLibraries)('$name', library => {
     expect(document.components?.schemas?.ErrorResponse).toEqual(EXPECTED_ERROR_RESPONSE_COMPONENT);
   });
 
-  it.skipIf(library.supportsComponents)(
+  it(
     'keeps successful and error responses inline instead of referencing components',
+    { skip: library.supportsComponents },
     async () => {
       const { card, error, libraryOptions } = library.createResponseSchemas();
 
@@ -205,7 +214,7 @@ describe.each(schemaLibraries)('$name', library => {
     },
   );
 
-  it.skipIf(!library.supportsOpenapi30Target)('renders a nullable field as OpenAPI 3.0 expects', async () => {
+  it('renders a nullable field as OpenAPI 3.0 expects', { skip: !library.supportsOpenapi30Target }, async () => {
     const { schema } = library.createNullableField();
     const document = await generateDocument([jsonResponseRoute(schema)], DOC_CONFIG_3_0, { version: '3.0' });
 
@@ -214,8 +223,9 @@ describe.each(schemaLibraries)('$name', library => {
     });
   });
 
-  it.skipIf(library.supportsOpenapi30Target)(
+  it(
     'answers the document route with a server error converting to the OpenAPI 3.0 JSON Schema target',
+    { skip: library.supportsOpenapi30Target },
     async () => {
       const { schema } = library.createNullableField();
       const response = await fetchDocument([jsonResponseRoute(schema)], DOC_CONFIG_3_0, { version: '3.0' });
