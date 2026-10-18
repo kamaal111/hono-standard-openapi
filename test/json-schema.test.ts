@@ -137,6 +137,63 @@ describe('schema conversion edge cases', () => {
     ).toEqual(raw);
   });
 
+  it.each<[JsonObject, JsonObject]>([
+    [{ anyOf: [{ type: 'string' }, { type: 'null' }] }, { type: ['null', 'string'] }],
+    [{ anyOf: [{ type: 'null' }, { type: 'integer' }] }, { type: ['null', 'integer'] }],
+    [
+      { anyOf: [{ enum: ['EUR', 'USD'], type: 'string' }, { type: 'null' }] },
+      { enum: ['EUR', 'USD', null], type: ['null', 'string'] },
+    ],
+    [
+      { anyOf: [{ type: 'null' }, { enum: ['EUR', 'USD'], type: 'string' }] },
+      { enum: ['EUR', 'USD', null], type: ['null', 'string'] },
+    ],
+    [
+      { anyOf: [{ enum: ['EUR', null], type: 'string' }, { type: 'null' }] },
+      { enum: ['EUR', null], type: ['null', 'string'] },
+    ],
+    [
+      { anyOf: [{ const: 'EUR', type: 'string' }, { type: 'null' }] },
+      { enum: ['EUR', null], type: ['null', 'string'] },
+    ],
+    [
+      { anyOf: [{ maxLength: 3, type: 'string' }, { type: 'null' }], description: 'Optional code' },
+      { description: 'Optional code', maxLength: 3, type: ['null', 'string'] },
+    ],
+  ])('preserves nullable values when collapsing %j', (schema, expected) => {
+    expect(convert(schema)).toEqual(expected);
+  });
+
+  it('preserves nullable literal unions when constant normalization is disabled', () => {
+    const schema: JsonObject = { anyOf: [{ const: 'EUR', type: 'string' }, { type: 'null' }] };
+
+    expect(convert(schema, { constToEnum: false })).toEqual(schema);
+  });
+
+  it('preserves nullable enum unions when nullable normalization is disabled', () => {
+    const schema: JsonObject = { anyOf: [{ enum: ['EUR', 'USD'], type: 'string' }, { type: 'null' }] };
+
+    expect(convert(schema, { collapseNullableUnions: false })).toEqual(schema);
+  });
+
+  it.each<JsonObject>([
+    { anyOf: [{ type: 'string' }, { enum: [], type: 'null' }] },
+    { anyOf: [{ type: 'string' }, { not: {}, type: 'null' }] },
+    { anyOf: [{ type: 'string' }, { type: 'null' }, { type: 'number' }] },
+    { anyOf: [{ type: 'string', not: {} }, { type: 'null' }] },
+    { anyOf: [{ type: 'string', allOf: [{ enum: ['EUR'] }] }, { type: 'null' }] },
+    { anyOf: [{ type: 'string', oneOf: [{ enum: ['EUR'] }] }, { type: 'null' }] },
+    { anyOf: [{ type: 'string', anyOf: [{ enum: ['EUR'] }] }, { type: 'null' }] },
+    { anyOf: [{ type: 'unknown' }, { type: 'null' }] },
+    { anyOf: [{ type: ['string', 'number'] }, { type: 'null' }] },
+    { anyOf: [{ type: 'null' }, { type: 'null' }] },
+    { anyOf: [{ type: 'string', minLength: 10 }, { type: 'null' }], minLength: 2 },
+    { anyOf: [{ type: 'string' }, { type: 'null' }], type: 'number' },
+    { anyOf: [{ type: 'string', title: 'Inner' }, { type: 'null' }], title: 'Outer' },
+  ])('retains nullable unions whose constraints cannot be safely merged: %j', schema => {
+    expect(convert(schema)).toEqual(schema);
+  });
+
   it('leaves unions that cannot be safely collapsed intact', () => {
     const cases: JsonObject[] = [
       { anyOf: [{ type: 'string' }] },

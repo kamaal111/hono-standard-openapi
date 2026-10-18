@@ -93,6 +93,24 @@ const DATA_KEYWORDS = new Set(['example', 'examples', 'default', 'const', 'enum'
 
 const DEFINITIONS_KEYWORDS = ['$defs', 'definitions'] as const;
 
+const NULLABLE_VALUE_TYPES = new Set(['string', 'number', 'integer', 'boolean', 'object', 'array']);
+
+/** These constraints may exclude null even after its type is allowed. */
+const NULLABLE_UNION_UNSAFE_KEYWORDS = new Set([
+  '$ref',
+  '$id',
+  '$dynamicRef',
+  '$recursiveRef',
+  'const',
+  'allOf',
+  'anyOf',
+  'oneOf',
+  'not',
+  'if',
+  'then',
+  'else',
+]);
+
 const COMPONENT_SCHEMAS_POINTER = '#/components/schemas';
 
 /**
@@ -378,7 +396,9 @@ function collapseNullableUnion(schema: JSONSchema): JSONSchema {
     return schema;
   }
 
-  const nullBranchIndex = branches.findIndex(branch => isObjectLike(branch) && branch.type === 'null');
+  const nullBranchIndex = branches.findIndex(
+    branch => isObjectLike(branch) && branch.type === 'null' && Object.keys(branch).length === 1,
+  );
 
   if (nullBranchIndex === -1) {
     return schema;
@@ -386,18 +406,24 @@ function collapseNullableUnion(schema: JSONSchema): JSONSchema {
 
   const valueBranch = branches[nullBranchIndex === 0 ? 1 : 0];
 
-  if (!isObjectLike(valueBranch) || !isJsonString(valueBranch.type)) {
+  if (!isObjectLike(valueBranch) || !isJsonString(valueBranch.type) || !NULLABLE_VALUE_TYPES.has(valueBranch.type)) {
     return schema;
   }
 
-  if (Object.keys(valueBranch).some(key => key === '$ref' || key === '$id')) {
+  const { anyOf: _branches, ...rest } = schema;
+
+  if (Object.keys(valueBranch).some(key => NULLABLE_UNION_UNSAFE_KEYWORDS.has(key) || Object.hasOwn(rest, key))) {
     return schema;
   }
 
   const { type, ...valueRest } = valueBranch;
-  const { anyOf: _branches, ...rest } = schema;
+  const collapsed: JSONSchema = { type: ['null', type], ...valueRest, ...rest };
 
-  return { type: [null, type], ...valueRest, ...rest };
+  if (Array.isArray(valueRest.enum) && !valueRest.enum.includes(null)) {
+    return { ...collapsed, enum: [...valueRest.enum, null] };
+  }
+
+  return collapsed;
 }
 
 function isStandardSchemaLike<T>(value: T): value is T & { '~standard': { vendor: string } } {

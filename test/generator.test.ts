@@ -292,7 +292,7 @@ describe('normalization', () => {
 
     const properties = documentFor(jsonResponseRoute(Thing)).components?.schemas?.Thing?.properties;
 
-    expect(properties.notes).toEqual({ maxLength: 10, type: [null, 'string'] });
+    expect(properties.notes).toEqual({ maxLength: 10, type: ['null', 'string'] });
   });
 
   it('rewrites a constant as a single-value enum', () => {
