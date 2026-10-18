@@ -51,7 +51,7 @@ publish:
     fi
 
     just compile
-    npm publish --access public
+    {{ PN }} publish --access public --no-git-checks
 
 # Format code
 format:
