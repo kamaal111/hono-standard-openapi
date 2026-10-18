@@ -196,6 +196,7 @@ export function convertSchema<T>(schema: T, options: ConvertOptions): JSONSchema
     components: options.components,
     normalization: { ...DEFAULT_NORMALIZATION, ...options.normalization },
     pointers: new Map(),
+    target: options.target,
   };
 
   const { definitions, root } = splitDefinitions(raw);
@@ -240,7 +241,8 @@ interface WalkContext {
   readonly components: ComponentCollector;
   readonly normalization: Required<NormalizationOptions>;
   /** Maps a converter-local pointer such as `#/$defs/Card` onto its component pointer. */
-  readonly pointers: Map<string, string>;
+  readonly pointers: Map<string, JSONSchema>;
+  readonly target: JSONSchemaTarget;
 }
 
 function splitDefinitions(raw: JSONSchema) {
@@ -279,14 +281,14 @@ function registerDefinitions(definitions: Record<string, JSONSchema>, context: W
     name: isJsonString(definition.$id) ? definition.$id : key,
   }));
 
-  for (const { key, name } of named) {
+  for (const { definition, key, name } of named) {
     for (const keyword of DEFINITIONS_KEYWORDS) {
-      context.pointers.set(`#/${keyword}/${key}`, `${COMPONENT_SCHEMAS_POINTER}/${name}`);
+      context.pointers.set(`#/${keyword}/${key}`, componentReference(name, definition));
     }
   }
 
   for (const { definition, name } of named) {
-    context.components.register(name, stripIdentity(prepare(definition, context)));
+    context.components.register(name, prepare(componentBody(definition), context));
   }
 }
 
@@ -299,16 +301,15 @@ function reserve(node: JSONSchema, context: WalkContext): void {
 
 /** Walks a node, hoisting it into components when it names itself. */
 function walk(node: JSONSchema, context: WalkContext): JSONSchema {
-  const prepared = prepare(node, context);
-  const name = prepared.$id;
+  const name = node.$id;
 
   if (!isJsonString(name)) {
-    return prepared;
+    return prepare(node, context);
   }
 
-  context.components.register(name, stripIdentity(prepared));
+  context.components.register(name, prepare(componentBody(node), context));
 
-  return { $ref: `${COMPONENT_SCHEMAS_POINTER}/${name}` };
+  return formatReference(componentReference(name, node), context);
 }
 
 /** Rewrites references, descends into subschemas, then normalizes — but leaves `$id` in place. */
@@ -316,7 +317,9 @@ function prepare(node: JSONSchema, context: WalkContext): JSONSchema {
   const reference = node.$ref;
 
   if (isJsonString(reference)) {
-    return { ...node, $ref: context.pointers.get(reference) ?? reference };
+    const { $ref: _reference, ...siblings } = node;
+
+    return formatReference({ ...(context.pointers.get(reference) ?? { $ref: reference }), ...siblings }, context);
   }
 
   const walked: JSONSchema = {};
@@ -338,6 +341,29 @@ function walkChild(value: SchemaValue, context: WalkContext): SchemaValue {
   }
 
   return walk(value, context);
+}
+
+/** Defaults annotate a use of a named schema rather than changing its shared validation rules. */
+function componentBody(schema: JSONSchema): JSONSchema {
+  const { $id: _identity, default: _default, ...body } = schema;
+
+  return body;
+}
+
+function componentReference(name: string, schema: JSONSchema): JSONSchema {
+  const reference = { $ref: `${COMPONENT_SCHEMAS_POINTER}/${name}` };
+
+  return Object.hasOwn(schema, 'default') ? { ...reference, default: schema.default } : reference;
+}
+
+function formatReference(schema: JSONSchema, context: WalkContext): JSONSchema {
+  if (context.target === 'draft-2020-12' || !Object.hasOwn(schema, 'default')) {
+    return schema;
+  }
+
+  const { $ref: reference, ...siblings } = schema;
+
+  return { allOf: [{ $ref: reference }], ...siblings };
 }
 
 function stripIdentity(schema: JSONSchema): JSONSchema {
