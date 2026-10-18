@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/kamaal111/hono-standard-openapi/compare/0.1.0...0.1.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **release:** publish through the configured pnpm version ([e769d34](https://github.com/kamaal111/hono-standard-openapi/commit/e769d347c987bcb549f457b2b3fd50223a135941))
+
 ## [0.1.0](https://github.com/kamaal111/hono-standard-openapi/compare/0.0.24...0.1.0) (2026-10-18)
 
 
