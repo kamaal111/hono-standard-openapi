@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-ci
@@ -38,7 +39,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install modules
-        run: pnpm install --frozen-lockfile
+        run: just install-modules-frozen
 
       - name: Check quality
         run: just quality
@@ -71,7 +72,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install modules
-        run: pnpm install --frozen-lockfile
+        run: just install-modules-frozen
 
       - name: Run tests
         run: just test

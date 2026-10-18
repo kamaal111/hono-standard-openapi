@@ -38,7 +38,20 @@ compile:
 
 # Publish package
 publish:
-    {{ PNR }} release
+    #!/usr/bin/env sh
+    set -e
+
+    if [ "${GITHUB_ACTIONS:-}" != "true" ] \
+      || [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] \
+      || [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]
+    then
+      echo "❌ This package may only be published by the GitHub Actions release workflow"
+      echo "Review and merge the Release Please PR to publish a new version"
+      exit 1
+    fi
+
+    just compile
+    npm publish --access public
 
 # Format code
 format:
@@ -62,6 +75,10 @@ prepare: install-modules
 # Install all modules
 install-modules:
     {{ PN }} i
+
+# Install modules without updating the lockfile
+install-modules-frozen:
+    {{ PN }} i --frozen-lockfile
 
 # Open project in zed
 zed:
