@@ -10,7 +10,8 @@ Documentation and maintenance commits alone do not create a release.
 
 Review the generated version and changelog, then merge the release PR. The release workflow creates
 an unprefixed tag such as `0.0.25`, creates a GitHub release, and publishes the committed package
-version to npm using trusted publishing. CI is explicitly dispatched for generated release PRs.
+version to npm using trusted publishing. CI runs on pull requests. For release PRs created by
+`GITHUB_TOKEN`, select **Approve workflows to run** when GitHub requests approval.
 Do not push release tags manually or set a `VERSION` environment variable.
 
 If npm publishing fails after the GitHub release is created, rerun the failed **Publish** job in
