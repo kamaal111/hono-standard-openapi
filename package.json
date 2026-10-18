@@ -1,6 +1,6 @@
 {
   "name": "@kamaalio/hono-standard-openapi",
-  "version": "0.0.24",
+  "version": "0.1.0",
   "description": "Generate OpenAPI documents from any Standard Schema library, for Hono.",
   "keywords": [
     "hono",
