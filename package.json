@@ -1,6 +1,6 @@
 {
   "name": "@kamaalio/hono-standard-openapi",
-  "version": "0.0.1",
+  "version": "0.0.24",
   "description": "Generate OpenAPI documents from any Standard Schema library, for Hono.",
   "keywords": [
     "hono",
@@ -36,7 +36,6 @@
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "prepare": "husky",
-    "release": "sh scripts/publish.sh",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit"
