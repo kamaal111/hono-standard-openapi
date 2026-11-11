@@ -259,9 +259,9 @@ describe.each(schemaLibraries)('$name routing', library => {
 
   it('serves routes that have no request schemas', async () => {
     const app = new StandardOpenAPIHono();
-    app.openapi(createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'ok' } } }), c =>
-      c.text('ok'),
-    );
+    app.openapi(createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'ok' } } }), c => {
+      return c.text('ok');
+    });
 
     await expect((await app.request('/health')).text()).resolves.toBe('ok');
   });
@@ -321,8 +321,9 @@ describe.each(schemaLibraries)('$name validation', library => {
     app.openapi(
       cardRoute,
       c => c.json({ id: 'handler' }),
-      async result =>
-        result.success ? new Response(JSON.stringify({ id: 'async-hook' }), { status: 202 }) : undefined,
+      async result => {
+        return result.success ? new Response(JSON.stringify({ id: 'async-hook' }), { status: 202 }) : undefined;
+      },
     );
 
     const response = await app.request('/cards/550e8400-e29b-41d4-a716-446655440000');

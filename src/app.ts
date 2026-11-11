@@ -16,7 +16,7 @@ export interface StandardOpenAPIHonoOptions<E extends Env> {
   readonly defaultHook?: Hook<unknown, E, string>;
 }
 
-type HonoInit<E extends Env> = ConstructorParameters<typeof Hono>[0] & StandardOpenAPIHonoOptions<E>;
+type HonoInit<E extends Env> = ConstructorParameters<typeof Hono<E>>[0] & StandardOpenAPIHonoOptions<E>;
 
 /** Any app, whatever it was parameterized with — used where apps are handled as peers. */
 interface StandardOpenAPIHonoParent<E extends Env> {
@@ -39,9 +39,8 @@ export class StandardOpenAPIHono<
   BasePath extends string = '/',
 > extends Hono<E, S, BasePath> {
   readonly defaultHook: StandardOpenAPIHonoOptions<E>['defaultHook'];
-  #registry: OpenAPIRegistry;
+  readonly #registry: OpenAPIRegistry;
   #parentApp?: StandardOpenAPIHonoParent<E> | undefined;
-  #routePrefix = '/';
 
   constructor(init?: HonoInit<E>) {
     super(init);
@@ -49,7 +48,7 @@ export class StandardOpenAPIHono<
     this.defaultHook = init?.defaultHook;
   }
 
-  /** Everything recorded for the document so far. Shared with apps derived by `basePath()`. */
+  /** Routes and components recorded for this app's document. */
   get openAPIRegistry(): OpenAPIRegistry {
     return this.#registry;
   }
@@ -63,7 +62,7 @@ export class StandardOpenAPIHono<
     const { hide, middleware, ...documented } = route;
 
     if (hide !== true) {
-      this.openAPIRegistry.registerPath({ ...documented, path: this.#documentPath(route.path) });
+      this.openAPIRegistry.registerPath({ ...documented, path: mergePath('/', route.path) });
     }
 
     const effectiveHook: Hook<unknown, E, string> = (result, c) => {
@@ -118,32 +117,6 @@ export class StandardOpenAPIHono<
     }
 
     return this;
-  }
-
-  /**
-   * Narrows the app to a path prefix, the way Hono's own `basePath` does.
-   *
-   * Hono clones into a plain `Hono`, which would drop both the registry and `openapi()`, so the
-   * derived app is rebuilt here. It shares the router, the routes and the registry, so either app
-   * serves and documents the whole surface.
-   */
-  basePath<SubPath extends string>(path: SubPath): StandardOpenAPIHono<E, S, MergePath<BasePath, SubPath>> {
-    const cloned = super.basePath(path);
-    const derived = new StandardOpenAPIHono<E, S, MergePath<BasePath, SubPath>>({ defaultHook: this.defaultHook });
-    const prefix = mergePath(this.#routePrefix, path);
-
-    derived.#registry = this.#registry;
-    derived.#parentApp = this;
-    derived.#routePrefix = prefix;
-    derived.router = cloned.router;
-    derived.routes = cloned.routes;
-    Object.assign(derived, { _basePath: prefix, getPath: cloned.getPath });
-
-    return derived;
-  }
-
-  #documentPath(path: string): string {
-    return mergePath(this.#routePrefix.replaceAll(/:([^/]+)/g, '{$1}'), path);
   }
 
   /** Builds the document for everything registered so far. */

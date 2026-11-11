@@ -8,6 +8,24 @@ interface MyEnv {
   Variables: { userId: string };
 }
 
+describe('StandardOpenAPIHono constructor', () => {
+  it('types custom path resolver bindings with the app environment', () => {
+    interface AppEnv {
+      Bindings: { API_PREFIX: string };
+    }
+
+    const app = new StandardOpenAPIHono<AppEnv>({
+      getPath: (request, options) => {
+        expectTypeOf(options).toEqualTypeOf<{ env?: AppEnv['Bindings'] } | undefined>();
+
+        return new URL(request.url).pathname;
+      },
+    });
+
+    expectTypeOf(app.basePath('/api')).toEqualTypeOf<Hono<AppEnv, BlankSchema, '/api'>>();
+  });
+});
+
 describe('HonoToStandardOpenAPIHono', () => {
   it('resolves a Hono type to the equivalent StandardOpenAPIHono type', () => {
     expectTypeOf<HonoToStandardOpenAPIHono<Hono<MyEnv, BlankSchema, '/api'>>>().toEqualTypeOf<
