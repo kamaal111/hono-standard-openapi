@@ -157,9 +157,9 @@ describe('status ranges and default responses', () => {
       },
     });
 
-    new StandardOpenAPIHono().openapi(route, c =>
-      Math.random() > 0.5 ? c.json({ message: 'boom' }, 503) : c.json({ ok: true }, 200),
-    );
+    new StandardOpenAPIHono().openapi(route, c => {
+      return Math.random() > 0.5 ? c.json({ message: 'boom' }, 503) : c.json({ ok: true }, 200);
+    });
   });
 });
 

@@ -59,21 +59,21 @@ describe('schema conversion edge cases', () => {
   });
 
   it('identifies unsupported schema vendors when possible', () => {
-    expect(() =>
-      convertSchema(null, { components: new ComponentCollector(), io: 'output', target: 'draft-2020-12' }),
-    ).toThrow('Schema does not implement Standard JSON Schema');
-    expect(() =>
-      convertSchema(
+    expect(() => {
+      return convertSchema(null, { components: new ComponentCollector(), io: 'output', target: 'draft-2020-12' });
+    }).toThrow('Schema does not implement Standard JSON Schema');
+    expect(() => {
+      return convertSchema(
         { '~standard': { vendor: 'opaque' } },
         { components: new ComponentCollector(), io: 'output', target: 'draft-2020-12' },
-      ),
-    ).toThrow('Schema from "opaque" does not implement Standard JSON Schema');
-    expect(() =>
-      convertSchema(
+      );
+    }).toThrow('Schema from "opaque" does not implement Standard JSON Schema');
+    expect(() => {
+      return convertSchema(
         { '~standard': null },
         { components: new ComponentCollector(), io: 'output', target: 'draft-2020-12' },
-      ),
-    ).toThrow(UnsupportedSchemaError);
+      );
+    }).toThrow(UnsupportedSchemaError);
   });
 
   it('rewrites both definition keywords and ignores non-schema definitions', () => {

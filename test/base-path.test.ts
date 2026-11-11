@@ -71,6 +71,23 @@ const schemaLibraryRecord: LibraryRecord<SchemaLibrary> = {
 
 const schemaLibraries = listLibraries(schemaLibraryRecord);
 
+it('preserves a custom path resolver when mounting a prefixed app', async () => {
+  const app = new StandardOpenAPIHono({
+    getPath: request => new URL(request.url).pathname.replace('/external', '/api'),
+  });
+
+  const api = new StandardOpenAPIHono();
+
+  api.get('/health', c => c.text('ok'));
+
+  app.route('/api', api);
+
+  const response = await app.request('/external/health');
+
+  expect(response.status).toBe(200);
+  expect(await response.text()).toBe('ok');
+});
+
 function createCardsRoute(library: SchemaLibrary) {
   return createRoute({
     method: 'get',
@@ -88,24 +105,33 @@ function createCardByIdRoute(library: SchemaLibrary) {
   });
 }
 
-describe.each(schemaLibraries)('$name basePath', library => {
+describe.each(schemaLibraries)('$name prefixed route mounting', library => {
   it('keeps serving and documenting under the prefix', async () => {
-    const api = new StandardOpenAPIHono().basePath('/api');
-
-    api.openapi(createCardsRoute(library), c => c.json({ ok: true }, 200));
-
-    expect(Object.keys(api.getOpenAPIDocument(documentConfig).paths ?? {})).toEqual(['/api/cards']);
-    expect((await api.request('/api/cards')).status).toBe(200);
-    expect((await api.request('/cards')).status).toBe(404);
-  });
-
-  it('shares one registry with the app it came from', () => {
     const app = new StandardOpenAPIHono();
-    const api = app.basePath('/api');
+    const api = new StandardOpenAPIHono();
 
     api.openapi(createCardsRoute(library), c => c.json({ ok: true }, 200));
+
+    app.route('/api', api);
 
     expect(Object.keys(app.getOpenAPIDocument(documentConfig).paths ?? {})).toEqual(['/api/cards']);
+    expect((await app.request('/api/cards')).status).toBe(200);
+    expect((await app.request('/cards')).status).toBe(404);
+  });
+
+  it('serves and documents nested route prefixes on the parent app', async () => {
+    const app = new StandardOpenAPIHono();
+    const api = new StandardOpenAPIHono();
+    const cards = new StandardOpenAPIHono();
+
+    cards.openapi(createCardsRoute(library), c => c.json({ ok: true }, 200));
+
+    api.route('/v1', cards);
+    app.route('/api', api);
+
+    expect(Object.keys(app.getOpenAPIDocument(documentConfig).paths ?? {})).toEqual(['/api/v1/cards']);
+    expect((await app.request('/api/v1/cards')).status).toBe(200);
+    expect((await app.request('/v1/cards')).status).toBe(404);
   });
 
   it('carries the default hook across', async () => {
@@ -113,7 +139,10 @@ describe.each(schemaLibraries)('$name basePath', library => {
       defaultHook: (result, c) => (result.success ? undefined : c.text('rejected by the default hook', 418)),
     });
 
-    app.basePath('/api').openapi(createCardByIdRoute(library), c => c.body(null, 200));
+    const api = new StandardOpenAPIHono();
+
+    api.openapi(createCardByIdRoute(library), c => c.body(null, 200));
+    app.route('/api', api);
 
     const response = await app.request('/api/cards/not-a-uuid');
 
@@ -122,12 +151,15 @@ describe.each(schemaLibraries)('$name basePath', library => {
   });
 
   it('validates a request that reaches a prefixed route', async () => {
-    const api = new StandardOpenAPIHono().basePath('/api');
+    const app = new StandardOpenAPIHono();
+    const api = new StandardOpenAPIHono();
 
     api.openapi(createCardByIdRoute(library), c => c.body(null, 200));
 
-    expect((await api.request('/api/cards/3f1b8d6e-58a1-4f0b-9f4a-2a1f5c7d9e00')).status).toBe(200);
-    expect((await api.request('/api/cards/not-a-uuid')).status).toBe(400);
+    app.route('/api', api);
+
+    expect((await app.request('/api/cards/3f1b8d6e-58a1-4f0b-9f4a-2a1f5c7d9e00')).status).toBe(200);
+    expect((await app.request('/api/cards/not-a-uuid')).status).toBe(400);
   });
 });
 

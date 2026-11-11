@@ -8,6 +8,7 @@ validator. Routes validate requests, infer handler types, and generate a matchin
 - [Installation](#installation)
 - [Schema-library support](#schema-library-support)
 - [Set up a route](#set-up-a-route)
+- [Mount routers under a prefix](#mount-routers-under-a-prefix)
 - [Define a reusable route](#define-a-reusable-route)
 - [Add middleware to a route](#add-middleware-to-a-route)
 - [Add response examples](#add-response-examples)
@@ -89,6 +90,22 @@ app.openapi(getCard, c => {
 Use `$id` once to make a schema a reusable OpenAPI component. The generated response then refers
 to `#/components/schemas/Card`. See the guides for nested components, multiple responses, errors,
 ArkType metadata, and the Valibot converter setup.
+
+## Mount routers under a prefix
+
+Register OpenAPI routes on a child app, then mount it with `route()`:
+
+```ts
+const cards = new StandardOpenAPIHono();
+cards.openapi(getCard, c => c.json({ id: c.req.valid('param').cardId, name: 'Luffy' }, 200));
+
+const app = new StandardOpenAPIHono();
+app.route('/api', cards);
+```
+
+The parent serves and documents `/api/cards/{cardId}`. Nested `route()` calls combine their prefixes.
+`basePath()` uses Hono's inherited behavior and returns a plain Hono app. Replace
+`app.basePath('/api').openapi(...)` with a child `StandardOpenAPIHono` mounted through `app.route('/api', child)`.
 
 ## Define a reusable route
 
