@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/kamaal111/hono-standard-openapi/compare/0.1.1...0.2.0) (2026-11-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** basePath() now returns Hono's native app rather than StandardOpenAPIHono. Register OpenAPI routes on a child app, then mount it with app.route('/api', child) instead of chaining openapi() after basePath('/api').
+
+### Build System
+
+* **deps:** upgrade dependencies and use native Hono routing ([5740878](https://github.com/kamaal111/hono-standard-openapi/commit/574087813109e72bc12b807c43abc448a6c85243))
+
 ## [0.1.1](https://github.com/kamaal111/hono-standard-openapi/compare/0.1.0...0.1.1) (2026-10-18)
 
 
